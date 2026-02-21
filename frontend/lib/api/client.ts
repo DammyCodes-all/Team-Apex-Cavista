@@ -1,16 +1,10 @@
 import axios, {
   AxiosError,
-  AxiosHeaders,
   AxiosRequestConfig,
   isAxiosError,
 } from "axios";
 
-import {
-  API_BASE_URL,
-  API_CSRF_HEADER_NAME,
-  API_MUTATING_METHODS,
-  API_TIMEOUT_MS,
-} from "@/lib/api/config";
+import { API_BASE_URL, API_TIMEOUT_MS } from "@/lib/api/config";
 
 type ApiErrorPayload = {
   message?: string;
@@ -26,59 +20,19 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-const csrfProtectedMethods = new Set(API_MUTATING_METHODS);
-
-apiClient.interceptors.request.use(async (config) => {
-  const method = (config.method ?? "get").toLowerCase();
-  const requiresCsrf = csrfProtectedMethods.has(method);
-
-  if (!requiresCsrf) {
-    return config;
-  }
-
-  const csrfToken = await getCsrfToken();
-
-  if (!csrfToken) {
-    return config;
-  }
-
-  const headers = AxiosHeaders.from(config.headers);
-
-  if (!headers.has(API_CSRF_HEADER_NAME)) {
-    headers.set(API_CSRF_HEADER_NAME, csrfToken);
-  }
-
-  config.headers = headers;
-  return config;
-});
-
 // Refresh deduplication
 let refreshPromise: Promise<void> | null = null;
 
 // Response interceptor: auto-refresh on 401/403 (token expiry)
 apiClient.interceptors.response.use(
-  async (response) => {
-    await syncCsrfTokenFromSetCookieHeader(response.headers?.["set-cookie"]);
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    await syncCsrfTokenFromSetCookieHeader(
-      error.response?.headers?.["set-cookie"],
-    );
 
     const status = error.response?.status;
-    const responseMessage = String(
-      error.response?.data?.message ?? error.response?.data?.error ?? "",
-    ).toLowerCase();
-    const isCsrfFailure = status === 403 && responseMessage.includes("csrf");
 
     // Skip refresh logic for refresh endpoint itself and other non-401/403 errors
-    if (
-      (status !== 401 && status !== 403) ||
-      isCsrfFailure ||
-      originalRequest.url === "/auth/refresh"
-    ) {
+    if ((status !== 401 && status !== 403) || originalRequest.url === "/auth/refresh") {
       return Promise.reject(error);
     }
 
