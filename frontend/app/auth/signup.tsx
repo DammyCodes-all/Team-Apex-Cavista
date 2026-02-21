@@ -17,21 +17,20 @@ import { useAuth } from "@/contexts/auth-context";
 export default function SignupScreen() {
   const colors = preventionTheme.colors.light;
   const { signUp, isLoading, error: authError, clearError } = useAuth();
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{
-    fullName?: string;
+    name?: string;
     email?: string;
     password?: string;
   }>({});
 
   const validateForm = () => {
-    const nextErrors: { fullName?: string; email?: string; password?: string } =
-      {};
+    const nextErrors: { name?: string; email?: string; password?: string } = {};
 
-    if (!fullName.trim()) {
-      nextErrors.fullName = "Full name is required";
+    if (!name.trim()) {
+      nextErrors.name = "Full name is required";
     }
 
     if (!email.trim()) {
@@ -44,6 +43,9 @@ export default function SignupScreen() {
       nextErrors.password = "Password is required";
     } else if (password.trim().length < 6) {
       nextErrors.password = "Password must be at least 6 characters";
+    } else if (!/[!@#$%^&*(),.?":{}|<>\-_+=\[\]\\/`~]/.test(password)) {
+      nextErrors.password =
+        "Password must include at least one special character";
     }
 
     setErrors(nextErrors);
@@ -56,13 +58,13 @@ export default function SignupScreen() {
     }
 
     const didSignUp = await signUp({
-      fullName: fullName.trim(),
+      name: name.trim(),
       email: email.trim().toLowerCase(),
       password,
     });
 
     if (didSignUp) {
-      router.replace("/");
+      router.replace("/onboarding/step-1");
     }
   };
 
@@ -126,14 +128,14 @@ export default function SignupScreen() {
                   placeholderTextColor={colors.inputPlaceholder}
                   autoCapitalize="words"
                   className="ml-s flex-1"
-                  value={fullName}
+                  value={name}
                   onChangeText={(value) => {
-                    setFullName(value);
+                    setName(value);
                     if (authError) {
                       clearError();
                     }
-                    if (errors.fullName) {
-                      setErrors((prev) => ({ ...prev, fullName: undefined }));
+                    if (errors.name) {
+                      setErrors((prev) => ({ ...prev, name: undefined }));
                     }
                   }}
                   style={{
@@ -143,7 +145,7 @@ export default function SignupScreen() {
                   }}
                 />
               </View>
-              {errors.fullName ? (
+              {errors.name ? (
                 <Text
                   className="mt-xs"
                   style={{
@@ -152,7 +154,7 @@ export default function SignupScreen() {
                     fontFamily: preventionTheme.typography.family.body,
                   }}
                 >
-                  {errors.fullName}
+                  {errors.name}
                 </Text>
               ) : null}
             </View>
