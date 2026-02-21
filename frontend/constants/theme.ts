@@ -1,53 +1,70 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+import { Platform } from "react-native";
+import { preventionTheme } from "@/constants/tokens";
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: preventionTheme.colors.light.textPrimary,
+    textSecondary: preventionTheme.colors.light.textSecondary,
+    background: preventionTheme.colors.light.background,
+    card: preventionTheme.colors.light.card,
+    tint: preventionTheme.colors.light.primary,
+    icon: preventionTheme.colors.light.tabIconDefault,
+    tabIconDefault: preventionTheme.colors.light.tabIconDefault,
+    tabIconSelected: preventionTheme.colors.light.tabIconSelected,
+    border: preventionTheme.colors.light.inputBorder,
+    success: preventionTheme.colors.light.success,
+    info: preventionTheme.colors.light.info,
+    error: preventionTheme.colors.light.error,
+    secondary: preventionTheme.colors.light.secondary,
+    accent: preventionTheme.colors.light.accent,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: preventionTheme.colors.dark.textPrimary,
+    textSecondary: preventionTheme.colors.dark.textSecondary,
+    background: preventionTheme.colors.dark.background,
+    card: preventionTheme.colors.dark.card,
+    tint: preventionTheme.colors.dark.primary,
+    icon: preventionTheme.colors.dark.tabIconDefault,
+    tabIconDefault: preventionTheme.colors.dark.tabIconDefault,
+    tabIconSelected: preventionTheme.colors.dark.tabIconSelected,
+    border: preventionTheme.colors.dark.inputBorder,
+    success: preventionTheme.colors.dark.success,
+    info: preventionTheme.colors.dark.info,
+    error: preventionTheme.colors.dark.error,
+    secondary: preventionTheme.colors.dark.secondary,
+    accent: preventionTheme.colors.dark.accent,
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    sans: preventionTheme.typography.family.body,
+    medium: preventionTheme.typography.family.medium,
+    semiBold: preventionTheme.typography.family.semiBold,
+    bold: preventionTheme.typography.family.bold,
+    serif: "ui-serif",
+    rounded: "ui-rounded",
+    mono: "ui-monospace",
   },
   default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+    sans: preventionTheme.typography.family.body,
+    medium: preventionTheme.typography.family.medium,
+    semiBold: preventionTheme.typography.family.semiBold,
+    bold: preventionTheme.typography.family.bold,
+    serif: "serif",
+    rounded: "normal",
+    mono: "monospace",
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    sans: "Poppins, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+    medium:
+      "Poppins, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+    semiBold:
+      "Poppins, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+    bold: "Poppins, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+    rounded:
+      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
