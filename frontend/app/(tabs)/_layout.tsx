@@ -90,12 +90,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="pedometer-test"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

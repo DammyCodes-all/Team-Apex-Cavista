@@ -20,7 +20,6 @@ import "./globals.css";
 import { preventionTheme } from "@/constants/tokens";
 import { AuthProvider } from "@/contexts/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { registerPedometerBackgroundTask } from "@/lib/background/pedometer-task";
 
 export const unstable_settings = {
   anchor: "index",
@@ -65,10 +64,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-
-  useEffect(() => {
-    registerPedometerBackgroundTask();
-  }, []);
 
   if (!loaded) {
     return null;
