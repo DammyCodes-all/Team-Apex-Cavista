@@ -22,6 +22,15 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="pedometer-test"
+        options={{
+          title: "Pedometer",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="directions-walk" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
