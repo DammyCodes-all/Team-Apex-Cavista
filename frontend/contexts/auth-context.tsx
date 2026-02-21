@@ -104,7 +104,13 @@ type LoginErrorResponse = {
   detail?: ValidationDetail[] | string;
 };
 
-const extractApiErrorMessage = <T extends { message?: string; error?: string; detail?: ValidationDetail[] | string }>(
+const extractApiErrorMessage = <
+  T extends {
+    message?: string;
+    error?: string;
+    detail?: ValidationDetail[] | string;
+  },
+>(
   caughtError: unknown,
   fallback: string,
 ) => {
@@ -206,13 +212,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const loginResponse = await post<string, LoginPayload>(
+        await post<string, LoginPayload>(
           "/auth/login",
           payload,
         );
         const nextSession = buildSession(
           payload.email,
-          loginResponse || `session-${Date.now()}`,
+          "cookie",
         );
         setSession(nextSession);
         await Promise.all([persistSession(nextSession), persistAuthHistory()]);
@@ -234,21 +240,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const signupResponse = await post<
+        await post<
           string,
           { email: string; password: string; name: string }
-        >(
-          "/auth/signup",
-          {
-            email: payload.email,
-            password: payload.password,
-            name: payload.name,
-          },
-        );
+        >("/auth/signup", {
+          email: payload.email,
+          password: payload.password,
+          name: payload.name,
+        });
 
         const nextSession = buildSession(
           payload.email,
-          signupResponse || `session-${Date.now()}`,
+          "cookie",
           payload.name,
         );
         setSession(nextSession);

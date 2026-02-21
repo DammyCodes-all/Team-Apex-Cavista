@@ -13,7 +13,54 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Enable cookies
 });
+
+// Refresh deduplication
+let refreshPromise: Promise<void> | null = null;
+
+// Response interceptor: auto-refresh on 401/403 (token expiry)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Skip refresh logic for refresh endpoint itself and other non-401/403 errors
+    if (
+      (error.response?.status !== 401 && error.response?.status !== 403) ||
+      originalRequest.url === "/auth/refresh"
+    ) {
+      return Promise.reject(error);
+    }
+
+    // Mark as already retried to prevent infinite loops
+    if ((originalRequest as Record<string, unknown>)?._retry) {
+      return Promise.reject(error);
+    }
+
+    (originalRequest as Record<string, unknown>)._retry = true;
+
+    try {
+      // Prevent multiple simultaneous refresh requests
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          try {
+            await apiClient.post("/auth/refresh");
+          } finally {
+            refreshPromise = null;
+          }
+        })();
+      }
+
+      await refreshPromise;
+
+      // Retry original request with refreshed cookie
+      return apiClient(originalRequest);
+    } catch {
+      return Promise.reject(error);
+    }
+  },
+);
 
 export const getErrorMessage = (error: unknown): string => {
   if (isAxiosError<ApiErrorPayload>(error)) {
