@@ -13,7 +13,7 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Enable cookies
+  withCredentials: true,
 });
 
 // Refresh deduplication
