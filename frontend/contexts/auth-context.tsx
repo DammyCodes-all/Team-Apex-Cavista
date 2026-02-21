@@ -10,6 +10,7 @@ import {
 } from "react";
 
 const AUTH_STORAGE_KEY = "@team-axle-cavista/auth-session";
+const AUTH_HISTORY_STORAGE_KEY = "@team-axle-cavista/auth-history";
 
 export type AuthUser = {
   id: string;
@@ -37,6 +38,7 @@ type AuthContextValue = {
   session: AuthSession | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  hasAuthHistory: boolean;
   isHydrating: boolean;
   isLoading: boolean;
   error: string | null;
@@ -105,6 +107,7 @@ const isValidSession = (value: unknown): value is AuthSession => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [hasAuthHistory, setHasAuthHistory] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const hydrate = async () => {
       try {
-        const rawSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+        const [rawSession, authHistoryValue] = await Promise.all([
+          AsyncStorage.getItem(AUTH_STORAGE_KEY),
+          AsyncStorage.getItem(AUTH_HISTORY_STORAGE_KEY),
+        ]);
+
+        setHasAuthHistory(authHistoryValue === "true");
 
         if (!rawSession) {
           return;
@@ -148,6 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const persistAuthHistory = useCallback(async () => {
+    setHasAuthHistory(true);
+    await AsyncStorage.setItem(AUTH_HISTORY_STORAGE_KEY, "true");
+  }, []);
+
   const signIn = useCallback(
     async (payload: LoginPayload) => {
       setIsLoading(true);
@@ -156,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const nextSession = await mockSignIn(payload);
         setSession(nextSession);
-        await persistSession(nextSession);
+        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;
       } catch (caughtError) {
         const message =
@@ -169,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [persistSession],
+    [persistSession, persistAuthHistory],
   );
 
   const signUp = useCallback(
@@ -180,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const nextSession = await mockSignUp(payload);
         setSession(nextSession);
-        await persistSession(nextSession);
+        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;
       } catch (caughtError) {
         const message =
@@ -193,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [persistSession],
+    [persistSession, persistAuthHistory],
   );
 
   const signOut = useCallback(async () => {
@@ -211,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       isAuthenticated: Boolean(session),
+      hasAuthHistory,
       isHydrating,
       isLoading,
       error,
@@ -221,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [
       session,
+      hasAuthHistory,
       isHydrating,
       isLoading,
       error,
