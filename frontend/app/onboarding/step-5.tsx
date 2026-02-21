@@ -1,6 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   Text,
@@ -11,6 +13,8 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { getErrorMessage } from "@/lib/api/client";
+import { updateProfile } from "@/lib/api/profile";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 
 interface SetupItem {
@@ -165,6 +169,9 @@ function TimelineItemCard({ item }: { item: TimelineItem }) {
 
 export default function OnboardingStepFive() {
   const colors = preventionTheme.colors.light;
+  const [isSubmitting, setIsSubmitting] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Get all collected data from the store
   const getOnboardingData = useOnboardingStore(
@@ -172,19 +179,113 @@ export default function OnboardingStepFive() {
   );
   const resetOnboarding = useOnboardingStore((state) => state.resetOnboarding);
 
-  const onboardingData = getOnboardingData();
+  const submitProfile = useCallback(async () => {
+    const onboardingData = getOnboardingData();
 
-  const handleSubmit = async () => {
-    // Log the data (in production, this would send to backend)
-    console.log("Onboarding Data:", onboardingData);
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    // TODO: Send onboardingData to backend API
-    // await submitOnboarding(onboardingData);
+    try {
+      await updateProfile({
+        name: onboardingData.personalInfo.name,
+        age: onboardingData.personalInfo.age,
+        gender: onboardingData.personalInfo.gender ?? "",
+        height_cm: onboardingData.personalInfo.height,
+        weight_kg: onboardingData.personalInfo.weight,
+        tracking_sleep: onboardingData.permissions.sleep,
+        tracking_steps: onboardingData.permissions.steps,
+        tracking_screen_time: onboardingData.permissions.screenTime,
+        tracking_voice_stress: onboardingData.permissions.voiceStress,
+      });
 
-    // Reset the store and navigate to home
-    resetOnboarding();
-    router.replace("/");
-  };
+      setIsSaved(true);
+      resetOnboarding();
+    } catch (error) {
+      setSubmitError(getErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [getOnboardingData, resetOnboarding]);
+
+  useEffect(() => {
+    void submitProfile();
+  }, [submitProfile]);
+
+  if (isSubmitting) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+        <OnboardingSwipeView step={5} totalSteps={5}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 24,
+            }}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text
+              style={{
+                color: "#2D3449",
+                fontSize: 16,
+                fontFamily: preventionTheme.typography.family.medium,
+                marginTop: 14,
+                textAlign: "center",
+              }}
+            >
+              Saving your profile...
+            </Text>
+          </View>
+        </OnboardingSwipeView>
+      </SafeAreaView>
+    );
+  }
+
+  if (submitError) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+        <OnboardingSwipeView step={5} totalSteps={5}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 24,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.error,
+                fontSize: 14,
+                fontFamily: preventionTheme.typography.family.body,
+                textAlign: "center",
+                marginBottom: 14,
+              }}
+            >
+              {submitError}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                void submitProfile();
+              }}
+              className="h-12 items-center justify-center rounded-button"
+              style={{ backgroundColor: colors.primary, paddingHorizontal: 16 }}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
+              >
+                Retry
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </OnboardingSwipeView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
@@ -301,9 +402,15 @@ export default function OnboardingStepFive() {
 
           <View className="mt-l pt-l">
             <TouchableOpacity
-              onPress={handleSubmit}
-              className="h-14 items-center justify-center rounded-button"
-              style={{ backgroundColor: colors.primary }}
+              onPress={() => {
+                if (isSaved) {
+                  router.replace("/");
+                }
+              }}
+              className="h-14 flex-row items-center justify-center rounded-button"
+              style={{
+                backgroundColor: colors.primary,
+              }}
             >
               <Text
                 style={{

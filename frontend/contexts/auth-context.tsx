@@ -23,7 +23,6 @@ export type AuthUser = {
 
 export type AuthSession = {
   user: AuthUser;
-  accessToken: string;
 };
 
 type LoginPayload = {
@@ -32,7 +31,7 @@ type LoginPayload = {
 };
 
 type SignupPayload = {
-  fullName: string;
+  name: string;
   email: string;
   password: string;
 };
@@ -53,35 +52,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-const buildMockSession = (fullName: string, email: string): AuthSession => ({
+const buildSession = (email: string, providedName?: string): AuthSession => ({
   user: {
     id: `${Date.now()}`,
-    fullName,
+    fullName:
+      providedName?.trim() ||
+      email
+        .split("@")[0]
+        ?.replace(/[._-]+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase()) ||
+      "User",
     email,
   },
-  accessToken: `mock-token-${Date.now()}`,
 });
-
-const mockSignIn = async ({ email, password }: LoginPayload) => {
-  await wait(700);
-
-  if (password.trim().length < 6) {
-    throw new Error("Invalid email or password");
-  }
-
-  const localPart = email.split("@")[0] ?? "User";
-  const fullName = localPart
-    .replace(/[._-]+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-  return buildMockSession(fullName || "User", email);
-};
 
 const isValidSession = (value: unknown): value is AuthSession => {
   if (!value || typeof value !== "object") {
@@ -90,7 +74,6 @@ const isValidSession = (value: unknown): value is AuthSession => {
 
   const candidate = value as Partial<AuthSession>;
   return Boolean(
-    candidate.accessToken &&
     candidate.user &&
     typeof candidate.user.id === "string" &&
     typeof candidate.user.fullName === "string" &&
@@ -108,22 +91,56 @@ type SignupErrorResponse = {
   detail?: ValidationDetail[];
 };
 
-const getSignupErrorMessage = (caughtError: unknown) => {
-  if (isAxiosError<SignupErrorResponse>(caughtError)) {
-    const detailMessage = caughtError.response?.data?.detail?.[0]?.msg;
+type LoginErrorResponse = {
+  message?: string;
+  error?: string;
+  detail?: ValidationDetail[] | string;
+};
+
+const extractApiErrorMessage = <
+  T extends {
+    message?: string;
+    error?: string;
+    detail?: ValidationDetail[] | string;
+  },
+>(
+  caughtError: unknown,
+  fallback: string,
+) => {
+  if (isAxiosError<T>(caughtError)) {
+    const detail = caughtError.response?.data?.detail;
+    const detailMessage =
+      typeof detail === "string"
+        ? detail
+        : Array.isArray(detail)
+          ? detail.find((item) => item?.msg)?.msg
+          : undefined;
+
     const message = caughtError.response?.data?.message;
     const error = caughtError.response?.data?.error;
 
-    return (
-      detailMessage ?? message ?? error ?? "Unable to create account right now"
-    );
+    return detailMessage ?? message ?? error ?? caughtError.message ?? fallback;
   }
 
   if (caughtError instanceof Error) {
     return caughtError.message;
   }
 
-  return "Unable to create account right now";
+  return fallback;
+};
+
+const getLoginErrorMessage = (caughtError: unknown) => {
+  return extractApiErrorMessage<LoginErrorResponse>(
+    caughtError,
+    "Unable to sign in right now",
+  );
+};
+
+const getSignupErrorMessage = (caughtError: unknown) => {
+  return extractApiErrorMessage<SignupErrorResponse>(
+    caughtError,
+    "Unable to create account right now",
+  );
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -188,15 +205,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const nextSession = await mockSignIn(payload);
+        await post<string, LoginPayload>(
+          "/auth/login",
+          payload,
+        );
+        const nextSession = buildSession(payload.email);
         setSession(nextSession);
         await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;
       } catch (caughtError) {
-        const message =
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to sign in right now";
+        const message = getLoginErrorMessage(caughtError);
         setError(message);
         return false;
       } finally {
@@ -212,16 +230,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        await post<string, { email: string; password: string; name: string }>(
-          "/auth/signup",
-          {
-            email: payload.email,
-            password: payload.password,
-            name: payload.fullName,
-          },
-        );
+        await post<
+          string,
+          { email: string; password: string; name: string }
+        >("/auth/signup", {
+          email: payload.email,
+          password: payload.password,
+          name: payload.name,
+        });
 
-        await persistAuthHistory();
+        const nextSession = buildSession(payload.email, payload.name);
+        setSession(nextSession);
+        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;
       } catch (caughtError) {
         const message = getSignupErrorMessage(caughtError);
@@ -231,13 +251,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [persistAuthHistory],
+    [persistAuthHistory, persistSession],
   );
 
   const signOut = useCallback(async () => {
-    setSession(null);
+    setIsLoading(true);
     setError(null);
-    await persistSession(null);
+
+    try {
+      await post<string>("/auth/logout");
+    } catch {
+      // Always clear local session even if logout request fails.
+    } finally {
+      setSession(null);
+      await persistSession(null);
+      setIsLoading(false);
+    }
   }, [persistSession]);
 
   const clearError = useCallback(() => {

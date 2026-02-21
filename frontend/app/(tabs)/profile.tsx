@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
 import {
   Alert,
@@ -17,6 +18,23 @@ import { useAuth } from "@/contexts/auth-context";
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
 const SCREEN_WIDTH = Dimensions.get("window").width;
+=======
+import { router } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
+
+>>>>>>> 5779fc6f8b69ad487c2a5b40cbb341311e9f5177
 
 // ─── Top Header (back arrow + Edit/Save) ──────────────────────────
 function TopHeader({
