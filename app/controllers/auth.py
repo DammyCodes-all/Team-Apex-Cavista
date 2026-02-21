@@ -35,12 +35,23 @@ async def signup(payload: SignUpRequest, response: Response, db=Depends(get_data
         response.set_cookie("refresh_token", result["refresh_token"], max_age=30 * 24 * 3600, **cookie_args)
         return {"status": "ok"}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        msg = str(e)
+        if "72 bytes" in msg or "truncate" in msg:
+            # avoid leaking bcrypt internal limits to clients
+            raise HTTPException(status_code=400, detail="Invalid password")
+        raise HTTPException(status_code=400, detail=msg)
 
 
 @router.post("/login")
 async def login(payload: LoginRequest, response: Response, request: Request, db=Depends(get_database)):
-    auth = await authenticate_user(db, payload.email, payload.password)
+    try:
+        auth = await authenticate_user(db, payload.email, payload.password)
+    except Exception as e:
+        msg = str(e)
+        if "72 bytes" in msg or "truncate" in msg:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+
     if auth is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     # device fingerprint
