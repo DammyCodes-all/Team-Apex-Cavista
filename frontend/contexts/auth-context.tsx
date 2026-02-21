@@ -23,7 +23,6 @@ export type AuthUser = {
 
 export type AuthSession = {
   user: AuthUser;
-  accessToken: string;
 };
 
 type LoginPayload = {
@@ -53,11 +52,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const buildSession = (
-  email: string,
-  accessToken: string,
-  providedName?: string,
-): AuthSession => ({
+const buildSession = (email: string, providedName?: string): AuthSession => ({
   user: {
     id: `${Date.now()}`,
     fullName:
@@ -70,7 +65,6 @@ const buildSession = (
       "User",
     email,
   },
-  accessToken,
 });
 
 const isValidSession = (value: unknown): value is AuthSession => {
@@ -80,7 +74,6 @@ const isValidSession = (value: unknown): value is AuthSession => {
 
   const candidate = value as Partial<AuthSession>;
   return Boolean(
-    candidate.accessToken &&
     candidate.user &&
     typeof candidate.user.id === "string" &&
     typeof candidate.user.fullName === "string" &&
@@ -216,10 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "/auth/login",
           payload,
         );
-        const nextSession = buildSession(
-          payload.email,
-          "cookie",
-        );
+        const nextSession = buildSession(payload.email);
         setSession(nextSession);
         await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;
@@ -249,11 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: payload.name,
         });
 
-        const nextSession = buildSession(
-          payload.email,
-          "cookie",
-          payload.name,
-        );
+        const nextSession = buildSession(payload.email, payload.name);
         setSession(nextSession);
         await Promise.all([persistSession(nextSession), persistAuthHistory()]);
         return true;

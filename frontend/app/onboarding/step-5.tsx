@@ -13,7 +13,8 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
-import { getErrorMessage, put } from "@/lib/api/client";
+import { getErrorMessage } from "@/lib/api/client";
+import { updateProfile } from "@/lib/api/profile";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 
 interface SetupItem {
@@ -185,7 +186,7 @@ export default function OnboardingStepFive() {
     setSubmitError(null);
 
     try {
-      await put("/profile", {
+      await updateProfile({
         name: onboardingData.personalInfo.name,
         age: onboardingData.personalInfo.age,
         gender: onboardingData.personalInfo.gender ?? "",

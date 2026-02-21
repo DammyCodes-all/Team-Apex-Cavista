@@ -1,6 +1,17 @@
-import axios, { AxiosError, AxiosRequestConfig, isAxiosError } from "axios";
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  AxiosRequestConfig,
+  isAxiosError,
+} from "axios";
 
-import { API_BASE_URL, API_TIMEOUT_MS } from "@/lib/api/config";
+import { getCsrfToken } from "@/lib/api/csrf";
+import {
+  API_BASE_URL,
+  API_CSRF_HEADER_NAME,
+  API_MUTATING_METHODS,
+  API_TIMEOUT_MS,
+} from "@/lib/api/config";
 
 type ApiErrorPayload = {
   message?: string;
@@ -14,6 +25,32 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
+});
+
+const csrfProtectedMethods = new Set(API_MUTATING_METHODS);
+
+apiClient.interceptors.request.use(async (config) => {
+  const method = (config.method ?? "get").toLowerCase();
+  const requiresCsrf = csrfProtectedMethods.has(method);
+
+  if (!requiresCsrf) {
+    return config;
+  }
+
+  const csrfToken = await getCsrfToken();
+
+  if (!csrfToken) {
+    return config;
+  }
+
+  const headers = AxiosHeaders.from(config.headers);
+
+  if (!headers.has(API_CSRF_HEADER_NAME)) {
+    headers.set(API_CSRF_HEADER_NAME, csrfToken);
+  }
+
+  config.headers = headers;
+  return config;
 });
 
 // Refresh deduplication
