@@ -4,9 +4,10 @@ motor
 pydantic
 python-jose[cryptography]
 passlib[bcrypt]
+argon2-cffi
 python-dotenv
 reportlab
 python-multipart
 pytest
 pytest-asyncio
-httpx
+httpx>=0.24.0

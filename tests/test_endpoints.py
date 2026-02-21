@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from app.main import app
 import asyncio
 
@@ -22,9 +22,8 @@ def fake_get_db(request=None):
     class FakeDB:
         def __init__(self):
             self.health = self
-n
-        async def find(self, q):
-            # return empty list
+        def find(self, q):
+            # return a cursor-like object with to_list
             return FakeCursor([])
 
     return FakeDB()
@@ -40,7 +39,7 @@ async def test_ai_insights_endpoint(monkeypatch):
     app.dependency_overrides[deps.get_current_user] = _cu
     app.dependency_overrides[deps.get_database] = lambda request=None: fake_get_db()
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/ai/insights")
         assert resp.status_code == 200
         data = resp.json()
