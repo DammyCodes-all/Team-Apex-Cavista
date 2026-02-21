@@ -6,10 +6,10 @@ class ProfileResponse(BaseModel):
     id: str
     email: str
     name: str
-    age: Optional[int]
-    gender: Optional[str]
-    height_cm: Optional[float]
-    weight_kg: Optional[float]
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
     tracking_sleep: bool = True
     tracking_steps: bool = True
     tracking_screen_time: bool = True
@@ -17,15 +17,17 @@ class ProfileResponse(BaseModel):
 
 
 class UpdateProfileRequest(BaseModel):
-    name: Optional[str]
-    age: Optional[int]
-    gender: Optional[str]
-    height_cm: Optional[float]
-    weight_kg: Optional[float]
-    tracking_sleep: Optional[bool]
-    tracking_steps: Optional[bool]
-    tracking_screen_time: Optional[bool]
-    tracking_voice_stress: Optional[bool]
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    tracking_sleep: Optional[bool] = None
+    tracking_steps: Optional[bool] = None
+    tracking_screen_time: Optional[bool] = None
+    tracking_voice_stress: Optional[bool] = None
+    goals_selected: Optional[list] = None
+    goals_custom: Optional[str] = None
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -37,7 +39,9 @@ class UpdateProfileRequest(BaseModel):
                 "tracking_sleep": True,
                 "tracking_steps": True,
                 "tracking_screen_time": True,
-                "tracking_voice_stress": True
+                "tracking_voice_stress": True,
+                "goals_selected": ["active", "focus", "health"],
+                "goals_custom": ""
             }
         }
     }
