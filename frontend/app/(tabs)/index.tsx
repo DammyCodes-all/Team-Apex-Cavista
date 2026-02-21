@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Path } from "react-native-svg";
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
