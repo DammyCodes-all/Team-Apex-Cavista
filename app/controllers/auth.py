@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+import logging
 from app.models.auth import SignUpRequest, LoginRequest
 from app.services.auth_service import signup_user, authenticate_user, store_refresh_token, rotate_refresh_token, revoke_refresh_token, generate_device_otp, mark_device_trusted
 from app.db.client import get_database
@@ -44,13 +45,14 @@ async def signup(payload: SignUpRequest, response: Response, db=Depends(get_data
 
 @router.post("/login")
 async def login(payload: LoginRequest, response: Response, request: Request, db=Depends(get_database)):
+    # authenticate_user returns None for invalid credentials; keep errors logged server-side
+    auth = None
     try:
         auth = await authenticate_user(db, payload.email, payload.password)
     except Exception as e:
-        msg = str(e)
-        if "72 bytes" in msg or "truncate" in msg:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+        logging.exception("Error during authentication")
+        # avoid leaking internal errors to client
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Authentication failed")
 
     if auth is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
