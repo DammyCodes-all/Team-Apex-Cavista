@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isAxiosError } from "axios";
 import {
   createContext,
   useCallback,
@@ -8,6 +9,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
+import { post } from "@/lib/api/client";
 
 const AUTH_STORAGE_KEY = "@team-axle-cavista/auth-session";
 const AUTH_HISTORY_STORAGE_KEY = "@team-axle-cavista/auth-history";
@@ -80,16 +83,6 @@ const mockSignIn = async ({ email, password }: LoginPayload) => {
   return buildMockSession(fullName || "User", email);
 };
 
-const mockSignUp = async ({ fullName, email, password }: SignupPayload) => {
-  await wait(900);
-
-  if (password.trim().length < 6) {
-    throw new Error("Password must be at least 6 characters");
-  }
-
-  return buildMockSession(fullName.trim(), email);
-};
-
 const isValidSession = (value: unknown): value is AuthSession => {
   if (!value || typeof value !== "object") {
     return false;
@@ -103,6 +96,34 @@ const isValidSession = (value: unknown): value is AuthSession => {
     typeof candidate.user.fullName === "string" &&
     typeof candidate.user.email === "string",
   );
+};
+
+type ValidationDetail = {
+  msg?: string;
+};
+
+type SignupErrorResponse = {
+  message?: string;
+  error?: string;
+  detail?: ValidationDetail[];
+};
+
+const getSignupErrorMessage = (caughtError: unknown) => {
+  if (isAxiosError<SignupErrorResponse>(caughtError)) {
+    const detailMessage = caughtError.response?.data?.detail?.[0]?.msg;
+    const message = caughtError.response?.data?.message;
+    const error = caughtError.response?.data?.error;
+
+    return (
+      detailMessage ?? message ?? error ?? "Unable to create account right now"
+    );
+  }
+
+  if (caughtError instanceof Error) {
+    return caughtError.message;
+  }
+
+  return "Unable to create account right now";
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -191,22 +212,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const nextSession = await mockSignUp(payload);
-        setSession(nextSession);
-        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
+        await post<string, { email: string; password: string; name: string }>(
+          "/auth/signup",
+          {
+            email: payload.email,
+            password: payload.password,
+            name: payload.fullName,
+          },
+        );
+
+        await persistAuthHistory();
         return true;
       } catch (caughtError) {
-        const message =
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to create account right now";
+        const message = getSignupErrorMessage(caughtError);
         setError(message);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [persistSession, persistAuthHistory],
+    [persistAuthHistory],
   );
 
   const signOut = useCallback(async () => {

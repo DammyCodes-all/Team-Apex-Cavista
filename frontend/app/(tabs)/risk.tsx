@@ -2,7 +2,7 @@ import { Text, View } from "react-native";
 
 import { preventionTheme } from "@/constants/tokens";
 
-export default function HomeTabScreen() {
+export default function RiskTabScreen() {
   const colors = preventionTheme.colors.light;
 
   return (
@@ -23,7 +23,7 @@ export default function HomeTabScreen() {
           textAlign: "center",
         }}
       >
-        Dashboard (Coming Soon)
+        Risk (Coming Soon)
       </Text>
     </View>
   );
