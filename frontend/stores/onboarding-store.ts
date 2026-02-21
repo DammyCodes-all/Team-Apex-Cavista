@@ -42,10 +42,10 @@ interface OnboardingStore {
     permissions: Record<PermissionKey, boolean>;
     personalInfo: {
       name: string;
-      age: string;
+      age: number;
       gender: string | null;
-      height: string;
-      weight: string;
+      height: number;
+      weight: number;
     };
     goals: {
       selected: GoalId[];
@@ -113,10 +113,10 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
       permissions: state.permissions,
       personalInfo: {
         name: state.name,
-        age: state.age,
+        age: parseInt(state.age, 10) || 0,
         gender: state.gender,
-        height: state.height,
-        weight: state.weight,
+        height: parseFloat(state.height) || 0,
+        weight: parseFloat(state.weight) || 0,
       },
       goals: {
         selected: state.selectedGoals,

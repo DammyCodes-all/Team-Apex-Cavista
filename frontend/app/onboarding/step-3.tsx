@@ -37,6 +37,35 @@ export default function OnboardingStepThree() {
 
   // Local modal state
   const [showGenderModal, setShowGenderModal] = useState(false);
+  const [showWhyWeAsk, setShowWhyWeAsk] = useState(false);
+
+  const WHY_WE_ASK_ITEMS = [
+    {
+      field: "Name",
+      reason:
+        "Helps us personalize your health insights and recommendations based on your preferences.",
+    },
+    {
+      field: "Age",
+      reason:
+        "Age-specific health patterns are critical for accurate risk assessment and prevention strategies.",
+    },
+    {
+      field: "Gender",
+      reason:
+        "Different health profiles between genders allow us to provide more targeted insights.",
+    },
+    {
+      field: "Height",
+      reason:
+        "Used to calculate BMI and understand your baseline physical metrics for health analysis.",
+    },
+    {
+      field: "Weight",
+      reason:
+        "Combines with height to assess your health metrics and track meaningful changes over time.",
+    },
+  ];
 
   const GENDER_OPTIONS = [
     { id: "female", label: "Female", icon: "female" },
@@ -279,6 +308,7 @@ export default function OnboardingStepThree() {
           </View>
 
           <TouchableOpacity
+            onPress={() => setShowWhyWeAsk(!showWhyWeAsk)}
             className="mt-m h-12 flex-row items-center justify-center rounded-2xl"
             activeOpacity={0.85}
             style={{ backgroundColor: "#DCE8EF" }}
@@ -293,12 +323,76 @@ export default function OnboardingStepThree() {
               Why we ask
             </Text>
             <MaterialIcons
-              name="keyboard-arrow-down"
+              name={showWhyWeAsk ? "keyboard-arrow-up" : "keyboard-arrow-down"}
               size={20}
               color="#2F80ED"
               style={{ marginLeft: 4 }}
             />
           </TouchableOpacity>
+
+          {showWhyWeAsk && (
+            <View
+              className="mt-m rounded-2xl"
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderWidth: 1,
+                borderColor: "#D8E4EC",
+                overflow: "hidden",
+              }}
+            >
+              {WHY_WE_ASK_ITEMS.map((item, index) => (
+                <View
+                  key={index}
+                  style={{
+                    borderBottomWidth:
+                      index < WHY_WE_ASK_ITEMS.length - 1 ? 1 : 0,
+                    borderBottomColor: "#E8EEF4",
+                  }}
+                >
+                  <View style={{ padding: 14 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 4,
+                          height: 16,
+                          backgroundColor: colors.primary,
+                          borderRadius: 2,
+                          marginRight: 10,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "#2D3449",
+                          fontSize: 15,
+                          fontFamily:
+                            preventionTheme.typography.family.semiBold,
+                        }}
+                      >
+                        {item.field}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        color: "#60718A",
+                        fontSize: 13,
+                        lineHeight: 20,
+                        fontFamily: preventionTheme.typography.family.body,
+                        marginLeft: 14,
+                      }}
+                    >
+                      {item.reason}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           <View className="mt-l items-center">
             <Link href="/onboarding/step-4" asChild>
@@ -422,7 +516,7 @@ export default function OnboardingStepThree() {
                         borderColor:
                           gender === option.id ? colors.primary : "#D3DEE8",
                         paddingHorizontal: 16,
-                        paddingVertical: 14,
+                        paddingVertical: 0,
                       }}
                     >
                       <MaterialIcons
