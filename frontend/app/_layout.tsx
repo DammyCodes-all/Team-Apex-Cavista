@@ -21,7 +21,7 @@ import { preventionTheme } from "@/constants/tokens";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export const unstable_settings = {
-  anchor: "onboarding",
+  anchor: "index",
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -70,8 +70,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <Stack initialRouteName="onboarding">
+      <Stack initialRouteName="index">
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="modal"
