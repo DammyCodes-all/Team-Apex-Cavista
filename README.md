@@ -1,0 +1,51 @@
+# Prevention AI — FastAPI backend (scaffold)
+
+Quickstart
+
+1. Create and activate virtualenv
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Copy `.env.example` to `.env` and update values
+
+3. Run dev server
+
+```bash
+uvicorn app.main:app --reload
+```
+
+4. Run tests
+
+```bash
+pytest
+```
+
+AI Module
+---------
+
+This project includes an AI-ready behavioral risk monitoring module that is disabled by default via environment variables. The AI integration provides:
+
+- Baseline modeling: learn a user's normal behavior over the first 2–3 weeks of passive metrics.
+- Deviation detection: rolling z-score or percent deviation triggers alerts and recommended micro-actions.
+- Structured AI insights returned from `GET /ai/insights` and included in exports from `GET /reports/download`.
+
+Enable or configure AI using the `.env` keys:
+
+- `ENABLE_AI_INSIGHTS` (true/false)
+- `AI_MODEL_PATH` / `AI_MODEL_NAME` — path to model or identifier
+- `AI_MODEL_TYPE` — `baseline`, `risk`, or `prediction`
+- `AI_REFRESH_INTERVAL_HOURS` — how often to refresh/retrain
+- `DEVIATION_THRESHOLD` — z-score or percent threshold used for alerting
+- `MAX_HISTORY_DAYS` — max days of historical data to consider
+- `USE_SYNTHETIC_DATA` / `SIMULATION_MODE` — for testing and debug runs
+
+Privacy Notes
+-------------
+
+- Sensitive signals (voice, raw location) must be opted-in: only aggregated features are stored.
+- The backend assumes on-device preprocessing for raw audio and location traces; only non-identifying aggregates are transmitted.
+
