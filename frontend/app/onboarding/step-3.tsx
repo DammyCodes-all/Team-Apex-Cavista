@@ -14,6 +14,7 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 
 export default function OnboardingStepThree() {
   const colors = preventionTheme.colors.light;

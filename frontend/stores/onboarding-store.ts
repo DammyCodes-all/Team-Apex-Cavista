@@ -1,6 +1,11 @@
 import { create } from "zustand";
 
-type PermissionKey = "steps" | "sleep" | "screenTime" | "location" | "voiceStress";
+type PermissionKey =
+  | "steps"
+  | "sleep"
+  | "screenTime"
+  | "location"
+  | "voiceStress";
 type GoalId = "sleep" | "active" | "stress" | "focus" | "health" | "custom";
 
 interface OnboardingStore {
@@ -11,23 +16,23 @@ interface OnboardingStore {
   // Step 3: Personal Info
   name: string;
   setName: (name: string) => void;
-  
+
   age: string;
   setAge: (age: string) => void;
-  
+
   gender: string | null;
   setGender: (gender: string | null) => void;
-  
+
   height: string;
   setHeight: (height: string) => void;
-  
+
   weight: string;
   setWeight: (weight: string) => void;
 
   // Step 4: Goals
   selectedGoals: GoalId[];
   setSelectedGoals: (goals: GoalId[]) => void;
-  
+
   customGoalText: string;
   setCustomGoalText: (text: string) => void;
 
@@ -63,23 +68,23 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
   // Step 3
   name: "",
   setName: (name) => set({ name }),
-  
+
   age: "",
   setAge: (age) => set({ age }),
-  
+
   gender: null,
   setGender: (gender) => set({ gender }),
-  
+
   height: "",
   setHeight: (height) => set({ height }),
-  
+
   weight: "",
   setWeight: (weight) => set({ weight }),
 
   // Step 4
   selectedGoals: [],
   setSelectedGoals: (selectedGoals) => set({ selectedGoals }),
-  
+
   customGoalText: "",
   setCustomGoalText: (customGoalText) => set({ customGoalText }),
 

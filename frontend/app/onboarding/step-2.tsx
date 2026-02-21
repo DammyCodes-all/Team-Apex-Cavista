@@ -63,15 +63,8 @@ const PERMISSIONS: {
 export default function OnboardingStepTwo() {
   const colors = preventionTheme.colors.light;
 
-  const [permissions, setPermissions] = useState<
-    Record<PermissionKey, boolean>
-  >({
-    steps: true,
-    sleep: true,
-    screenTime: true,
-    location: true,
-    voiceStress: false,
-  });
+  const permissions = useOnboardingStore((state) => state.permissions);
+  const setPermissions = useOnboardingStore((state) => state.setPermissions);
 
   const enabledCount = useMemo(
     () => Object.values(permissions).filter(Boolean).length,
@@ -79,7 +72,7 @@ export default function OnboardingStepTwo() {
   );
 
   const togglePermission = (key: PermissionKey, value: boolean) => {
-    setPermissions((prev) => ({ ...prev, [key]: value }));
+    setPermissions({ ...permissions, [key]: value });
   };
 
   return (
