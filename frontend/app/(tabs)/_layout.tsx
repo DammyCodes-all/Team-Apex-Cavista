@@ -1,4 +1,4 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
 import { preventionTheme } from "@/constants/tokens";
@@ -10,25 +10,80 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        sceneStyle: {
+          backgroundColor: colors.background,
+        },
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarLabelStyle: {
+          fontFamily: preventionTheme.typography.family.medium,
+          fontSize: 11,
+          marginBottom: 2,
+        },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: "transparent",
+          borderTopWidth: 0,
+          borderColor: colors.inputBorder,
+          borderWidth: 1,
+          height: 68,
+          paddingTop: 8,
+          paddingBottom: 6,
+          position: "absolute",
+          left: 12,
+          right: 12,
+          bottom: 0,
+          borderTopLeftRadius: 25,
+          borderTopRightRadius: 25,
+          borderBottomLeftRadius: 25,
+          borderBottomRightRadius: 25,
+          elevation: 0,
+          shadowOpacity: 0,
+          overflow: "hidden",
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home-filled" color={color} size={size} />
+            <Ionicons name="home-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="risk"
+        options={{
+          title: "Risk",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="warning-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: "Reports",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="pedometer-test"
         options={{
-          title: "Pedometer",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="directions-walk" color={color} size={size} />
-          ),
+          href: null,
         }}
       />
     </Tabs>

@@ -25,6 +25,50 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## API hooks
+
+Reusable API hooks are available for backend calls against:
+
+- `https://team-apex-cavista.onrender.com`
+
+### Available hooks
+
+- `useGet<TResponse>(endpoint)`
+- `usePost<TResponse, TBody>(endpoint)`
+- `usePut<TResponse, TBody>(endpoint)`
+- `usePatch<TResponse, TBody>(endpoint)`
+- `useDelete<TResponse, TBody>(endpoint)`
+- `useApiRequest<TResponse, TPayload>(requestFn)` for custom flows
+
+Import from:
+
+- `@/hooks`
+
+Example:
+
+```tsx
+import { useEffect } from "react";
+import { useGet, usePost } from "@/hooks";
+
+type Profile = { id: string; name: string };
+type UpdateProfileBody = { name: string };
+
+export function ExampleScreen() {
+  const profileQuery = useGet<Profile>("/profile/me");
+  const updateProfile = usePost<Profile, UpdateProfileBody>("/profile/update");
+
+  useEffect(() => {
+    void profileQuery.execute();
+  }, [profileQuery]);
+
+  const onSave = async () => {
+    await updateProfile.execute({ name: "New Name" });
+  };
+
+  return null;
+}
+```
+
 ## Get a fresh project
 
 When you're ready, run:
