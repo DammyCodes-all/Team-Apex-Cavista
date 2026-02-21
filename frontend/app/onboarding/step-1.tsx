@@ -11,7 +11,7 @@ export default function OnboardingStepOne() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
       <View
-        className="flex-1 px-5 py-10 mt-20"
+        className="flex-1 px-5 mt-17"
         style={{
           backgroundColor: "#C9DCE8",
           paddingTop: 20,
