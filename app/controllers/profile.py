@@ -17,6 +17,15 @@ async def read_profile(current_user=Depends(get_current_user), db=Depends(get_da
     return user
 
 
+# POST support alongside PUT; some clients prefer POST for updates
+@router.post("", response_model=ProfileResponse)
+async def create_or_update_profile(payload: UpdateProfileRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
+    patched = payload.model_dump(exclude_none=True)
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
+    user = await update_profile(db, user_id, patched)
+    return user
+
+
 @router.put("", response_model=ProfileResponse)
 async def update_profile_endpoint(payload: UpdateProfileRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
     patched = payload.model_dump(exclude_none=True)
