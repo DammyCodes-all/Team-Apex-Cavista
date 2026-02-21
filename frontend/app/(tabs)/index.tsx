@@ -652,6 +652,29 @@ export default function HomeScreen() {
         <MetricsGrid />
         <WeeklyGoals />
       </ScrollView>
+
+      {/* AI Chat FAB */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={{
+          position: "absolute",
+          bottom: 90,
+          right: 20,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: colors.primary,
+          justifyContent: "center",
+          alignItems: "center",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 6,
+        }}
+      >
+        <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

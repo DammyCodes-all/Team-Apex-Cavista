@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
+import { View } from "react-native";
 
 import { preventionTheme } from "@/constants/tokens";
 
@@ -14,51 +15,94 @@ export default function TabsLayout() {
           backgroundColor: colors.background,
         },
         tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarLabelStyle: {
           fontFamily: preventionTheme.typography.family.medium,
           fontSize: 11,
-          marginBottom: 2,
+          marginTop: 2,
         },
         tabBarStyle: {
           backgroundColor: colors.card,
-          borderTopColor: "transparent",
           borderTopWidth: 0,
-          borderColor: colors.inputBorder,
-          borderWidth: 1,
-          height: 68,
-          paddingTop: 8,
-          paddingBottom: 6,
+          height: 72,
+          paddingTop: 10,
+          paddingBottom: 8,
+          paddingHorizontal: 8,
           position: "absolute",
-          left: 12,
-          right: 12,
+          left: 0,
+          right: 0,
           bottom: 0,
-          borderTopLeftRadius: 25,
-          borderTopRightRadius: 25,
-          borderBottomLeftRadius: 25,
-          borderBottomRightRadius: 25,
           elevation: 0,
-          shadowOpacity: 0,
-          overflow: "hidden",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+        },
+        tabBarItemStyle: {
+          gap: 2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                color={color}
+                size={22}
+              />
+              {focused && (
+                <View
+                  style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.primary,
+                    marginTop: 3,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="risk"
         options={{
-          title: "Risk",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="warning-outline" color={color} size={size} />
+          title: "Trends",
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={focused ? "bar-chart" : "bar-chart-outline"}
+                color={color}
+                size={22}
+              />
+              {focused && (
+                <View
+                  style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.primary,
+                    marginTop: 3,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />
@@ -66,8 +110,30 @@ export default function TabsLayout() {
         name="reports"
         options={{
           title: "Reports",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart-outline" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={focused ? "document-text" : "document-text-outline"}
+                color={color}
+                size={22}
+              />
+              {focused && (
+                <View
+                  style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.primary,
+                    marginTop: 3,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />
@@ -75,8 +141,30 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={focused ? "person" : "person-outline"}
+                color={color}
+                size={22}
+              />
+              {focused && (
+                <View
+                  style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.primary,
+                    marginTop: 3,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />

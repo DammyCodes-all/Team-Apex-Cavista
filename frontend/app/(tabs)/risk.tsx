@@ -25,6 +25,7 @@ function Header() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 8,
+          marginTop: 15,
         }}
       >
         <Text
