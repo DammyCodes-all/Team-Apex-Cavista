@@ -26,3 +26,18 @@ class UpdateProfileRequest(BaseModel):
     tracking_steps: Optional[bool]
     tracking_screen_time: Optional[bool]
     tracking_voice_stress: Optional[bool]
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "string",
+                "age": 0,
+                "gender": "string",
+                "height_cm": 0,
+                "weight_kg": 0,
+                "tracking_sleep": True,
+                "tracking_steps": True,
+                "tracking_screen_time": True,
+                "tracking_voice_stress": True
+            }
+        }
+    }
