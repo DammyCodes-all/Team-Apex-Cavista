@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 # new structured api modules
-from app.api import auth_routes, metrics_routes, dashboard_routes
+from app.api import auth_routes, metrics_routes, dashboard_routes, profile_routes
 
 # legacy controllers (kept for backward compatibility)
 from app.controllers import auth as auth_controller
@@ -16,6 +16,7 @@ router = APIRouter()
 # include new API routers
 router.include_router(auth_routes.router)
 router.include_router(metrics_routes.router)
+router.include_router(profile_routes.router)
 router.include_router(dashboard_routes.router)
 
 # legacy endpoints (optional) - removed to prevent duplicates; functionality should be
