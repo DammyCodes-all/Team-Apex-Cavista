@@ -1,10 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function TabsLayout() {
   const colors = preventionTheme.colors.light;
+  const { isAuthenticated, isHydrating, hasAuthHistory } = useAuth();
+
+  if (isHydrating) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href={hasAuthHistory ? "/auth/login" : "/auth/signup"} />;
+  }
 
   return (
     <Tabs

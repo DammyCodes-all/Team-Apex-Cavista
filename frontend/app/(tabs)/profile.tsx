@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   ScrollView,
   View,
   Text,
@@ -13,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { preventionTheme } from "@/constants/tokens";
 import { useAuth } from "@/contexts/auth-context";
+import { useGet } from "@/hooks/use-api-methods";
+import { type ProfileResponse } from "@/lib/api/profile";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
@@ -56,7 +57,7 @@ function TopHeader({
 }
 
 // ─── Avatar Section ────────────────────────────────────────────────
-function AvatarSection() {
+function AvatarSection({ name, subtitle }: { name: string; subtitle: string }) {
   return (
     <View style={{ alignItems: "center", marginBottom: 28 }}>
       <Text
@@ -117,7 +118,7 @@ function AvatarSection() {
           marginBottom: 2,
         }}
       >
-        Alex Doe
+        {name}
       </Text>
       <Text
         style={{
@@ -127,7 +128,7 @@ function AvatarSection() {
           color: colors.textSecondary,
         }}
       >
-        Premium Member since Jan 2023
+        {subtitle}
       </Text>
     </View>
   );
@@ -444,15 +445,40 @@ function PersonalInfo({
 }
 
 // ─── Preferences ───────────────────────────────────────────────────
-function Preferences() {
-  const [aiDaily, setAiDaily] = useState(true);
-  const [healthKit, setHealthKit] = useState(true);
-  const [shareAnon, setShareAnon] = useState(false);
-
+function Preferences({
+  trackingSleep,
+  trackingSteps,
+  trackingScreenTime,
+  trackingVoiceStress,
+  onToggle,
+}: {
+  trackingSleep: boolean;
+  trackingSteps: boolean;
+  trackingScreenTime: boolean;
+  trackingVoiceStress: boolean;
+  onToggle: (key: "sleep" | "steps" | "screenTime" | "voiceStress") => void;
+}) {
   const toggles = [
-    { label: "AI Daily Analysis", value: aiDaily, setter: setAiDaily },
-    { label: "HealthKit Sync", value: healthKit, setter: setHealthKit },
-    { label: "Share Anonymous Data", value: shareAnon, setter: setShareAnon },
+    {
+      label: "AI Daily Analysis",
+      value: trackingSleep,
+      onPress: () => onToggle("sleep"),
+    },
+    {
+      label: "HealthKit Sync",
+      value: trackingSteps,
+      onPress: () => onToggle("steps"),
+    },
+    {
+      label: "Share Anonymous Data",
+      value: trackingScreenTime,
+      onPress: () => onToggle("screenTime"),
+    },
+    {
+      label: "Voice Stress Insights",
+      value: trackingVoiceStress,
+      onPress: () => onToggle("voiceStress"),
+    },
   ];
 
   return (
@@ -514,7 +540,7 @@ function Preferences() {
             </Text>
             <Switch
               value={item.value}
-              onValueChange={item.setter}
+              onValueChange={item.onPress}
               trackColor={{ false: "#E0E0E0", true: colors.primary }}
               thumbColor="#FFFFFF"
             />
@@ -525,27 +551,11 @@ function Preferences() {
   );
 }
 
-// ─── Log Out + Version ─────────────────────────────────────────────
 function Footer({ onLogOut }: { onLogOut: () => void }) {
-  const handleLogOut = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: onLogOut,
-        },
-      ],
-    );
-  };
-
   return (
     <View style={{ alignItems: "center", marginBottom: 24 }}>
       <TouchableOpacity
-        onPress={handleLogOut}
+        onPress={onLogOut}
         style={{
           width: "100%",
           paddingVertical: 14,
@@ -589,7 +599,7 @@ function Footer({ onLogOut }: { onLogOut: () => void }) {
 
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function ProfileTabScreen() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: "Alex Doe",
@@ -597,6 +607,14 @@ export default function ProfileTabScreen() {
     height: "175",
     weight: "68",
   });
+  const [preferences, setPreferences] = useState({
+    trackingSleep: true,
+    trackingSteps: true,
+    trackingScreenTime: true,
+    trackingVoiceStress: false,
+  });
+  const { data: profile, execute: fetchProfile } =
+    useGet<ProfileResponse>("/profile");
 
   const handleToggleEdit = () => {
     setIsEditing((prev) => !prev);
@@ -610,6 +628,51 @@ export default function ProfileTabScreen() {
     setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    const resolvedName = profile.name || user?.fullName || "";
+
+    setProfileData({
+      name: resolvedName,
+      age: profile.age ? String(profile.age) : "",
+      height: profile.height_cm ? String(profile.height_cm) : "",
+      weight: profile.weight_kg ? String(profile.weight_kg) : "",
+    });
+
+    setPreferences({
+      trackingSleep: profile.tracking_sleep,
+      trackingSteps: profile.tracking_steps,
+      trackingScreenTime: profile.tracking_screen_time,
+      trackingVoiceStress: profile.tracking_voice_stress,
+    });
+  }, [profile, user?.fullName]);
+
+  const displayName = profileData.name || user?.fullName || "Profile";
+  const displaySubtitle = profile?.email || user?.email || "Premium Member";
+  const handleTogglePreference = (
+    key: "sleep" | "steps" | "screenTime" | "voiceStress",
+  ) => {
+    setPreferences((prev) => {
+      if (key === "sleep") {
+        return { ...prev, trackingSleep: !prev.trackingSleep };
+      }
+      if (key === "steps") {
+        return { ...prev, trackingSteps: !prev.trackingSteps };
+      }
+      if (key === "screenTime") {
+        return { ...prev, trackingScreenTime: !prev.trackingScreenTime };
+      }
+      return { ...prev, trackingVoiceStress: !prev.trackingVoiceStress };
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -617,14 +680,20 @@ export default function ProfileTabScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TopHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} />
-        <AvatarSection />
+        <AvatarSection name={displayName} subtitle={displaySubtitle} />
         <BaselineSummary />
         <PersonalInfo
           isEditing={isEditing}
           profileData={profileData}
           onChangeField={handleChangeField}
         />
-        <Preferences />
+        <Preferences
+          trackingSleep={preferences.trackingSleep}
+          trackingSteps={preferences.trackingSteps}
+          trackingScreenTime={preferences.trackingScreenTime}
+          trackingVoiceStress={preferences.trackingVoiceStress}
+          onToggle={handleTogglePreference}
+        />
         <Footer onLogOut={handleLogOut} />
       </ScrollView>
     </SafeAreaView>
