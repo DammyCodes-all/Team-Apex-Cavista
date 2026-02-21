@@ -7,6 +7,7 @@ import {
   Dimensions,
   PanResponder,
   GestureResponderEvent,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -122,7 +123,11 @@ function ReportHeader() {
               color: colors.textPrimary,
             }}
           >
-            Oct 24, 2023
+            {new Date().toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
           </Text>
         </View>
       </View>
@@ -725,10 +730,11 @@ function ActionableInsights() {
 }
 
 // ─── Download Button ────────────────────────────────────────────────
-function DownloadButton() {
+function DownloadButton({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
+      onPress={onPress}
       style={{
         backgroundColor: colors.primary,
         borderRadius: 16,
@@ -749,14 +755,178 @@ function DownloadButton() {
           color: "#FFFFFF",
         }}
       >
-        Download Full PDF
+        Get Full PDF
       </Text>
     </TouchableOpacity>
   );
 }
 
+// ─── Report Ready Modal ─────────────────────────────────────────────
+function ReportReadyModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+          backgroundColor: "rgba(0,0,0,0.35)",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingHorizontal: 28,
+            paddingTop: 24,
+            paddingBottom: 32,
+            alignItems: "center",
+          }}
+        >
+          {/* Close button */}
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ position: "absolute", top: 20, right: 24 }}
+          >
+            <Ionicons name="close" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Checkmark circle */}
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: "#E8F5E9",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 12,
+              marginBottom: 20,
+            }}
+          >
+            <Ionicons name="checkmark" size={40} color="#10b981" />
+          </View>
+
+          {/* Title */}
+          <Text
+            style={{
+              fontFamily: typo.family.bold,
+              fontSize: typo.size.headline,
+              lineHeight: typo.lineHeight.headline,
+              color: colors.textPrimary,
+              marginBottom: 12,
+              textAlign: "center",
+            }}
+          >
+            Report ready!
+          </Text>
+
+          {/* Description */}
+          <Text
+            style={{
+              fontFamily: typo.family.body,
+              fontSize: typo.size.bodyLg,
+              lineHeight: 24,
+              color: colors.textSecondary,
+              textAlign: "center",
+              marginBottom: 28,
+              paddingHorizontal: 8,
+            }}
+          >
+            Your weekly wellness analysis has been successfully exported. You
+            can now save it to your device or share it with your provider.
+          </Text>
+
+          {/* Download PDF button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: 28,
+              paddingVertical: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              width: "100%",
+              marginBottom: 12,
+            }}
+          >
+            <Ionicons name="download-outline" size={20} color="#FFFFFF" />
+            <Text
+              style={{
+                fontFamily: typo.family.semiBold,
+                fontSize: typo.size.bodyLg,
+                lineHeight: typo.lineHeight.bodyLg,
+                color: "#FFFFFF",
+              }}
+            >
+              Download PDF
+            </Text>
+          </TouchableOpacity>
+
+          {/* Share button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: "#6FD9A6",
+              borderRadius: 28,
+              paddingVertical: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              width: "100%",
+              marginBottom: 16,
+            }}
+          >
+            <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+            <Text
+              style={{
+                fontFamily: typo.family.semiBold,
+                fontSize: typo.size.bodyLg,
+                lineHeight: typo.lineHeight.bodyLg,
+                color: "#FFFFFF",
+              }}
+            >
+              Share
+            </Text>
+          </TouchableOpacity>
+
+          {/* Done */}
+          <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+            <Text
+              style={{
+                fontFamily: typo.family.medium,
+                fontSize: typo.size.bodyLg,
+                lineHeight: typo.lineHeight.bodyLg,
+                color: colors.textSecondary,
+              }}
+            >
+              Done
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function ReportsTabScreen() {
+  const [modalVisible, setModalVisible] = useState(false);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -769,8 +939,13 @@ export default function ReportsTabScreen() {
         <MetricCards />
         <DailyActivityChart />
         <ActionableInsights />
-        <DownloadButton />
+        <DownloadButton onPress={() => setModalVisible(true)} />
       </ScrollView>
+
+      <ReportReadyModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

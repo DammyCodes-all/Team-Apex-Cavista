@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ScrollView,
   View,
@@ -16,8 +16,167 @@ const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// ─── Types ──────────────────────────────────────────────────────────
+interface StepsData {
+  count: number;
+  trend: number; // percentage vs avg, e.g. 12 = +12%
+  sparkline: number[];
+}
+
+interface SleepData {
+  hours: number;
+  minutes: number;
+  quality: "Excellent" | "Good" | "Fair" | "Poor";
+}
+
+interface ScreenTimeData {
+  hours: number;
+  minutes: number;
+  status: "Low" | "Moderate" | "High Usage";
+}
+
+interface ActivityBar {
+  h: number;
+  active: boolean;
+}
+
+interface GoalItem {
+  label: string;
+  current: number;
+  target: number;
+  unit: string;
+  color: string;
+}
+
+interface InsightData {
+  highlight: string;
+  beforeHighlight: string;
+  afterHighlight: string;
+  isNew: boolean;
+}
+
+interface DashboardData {
+  userName: string;
+  steps: StepsData;
+  sleep: SleepData;
+  screenTime: ScreenTimeData;
+  activityBars: ActivityBar[];
+  goals: GoalItem[];
+  insight: InsightData;
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function getFormattedDate(): string {
+  const now = new Date();
+  const day = now.toLocaleDateString("en-US", { weekday: "long" });
+  const date = now.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  });
+  return `${day}, ${date}`;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString();
+}
+
+function formatDuration(hours: number, minutes: number): string {
+  return `${hours}h ${minutes}m`;
+}
+
+function getSleepQualityColor(quality: SleepData["quality"]): string {
+  switch (quality) {
+    case "Excellent":
+      return "#10b981";
+    case "Good":
+      return "#10b981";
+    case "Fair":
+      return "#F59E0B";
+    case "Poor":
+      return colors.error;
+  }
+}
+
+function getScreenTimeColor(status: ScreenTimeData["status"]): string {
+  switch (status) {
+    case "Low":
+      return "#10b981";
+    case "Moderate":
+      return "#F59E0B";
+    case "High Usage":
+      return colors.error;
+  }
+}
+
+// ─── Mock data (swap with API later) ────────────────────────────────
+function useDashboardData(): DashboardData {
+  // In the future, replace this with a real API call:
+  // const { data } = useApiRequest<DashboardData>('/dashboard');
+  const [data] = useState<DashboardData>({
+    userName: "Alex",
+    steps: {
+      count: 8240,
+      trend: 12,
+      sparkline: [30, 45, 38, 52, 48, 60, 55, 70, 62, 78, 72, 85],
+    },
+    sleep: {
+      hours: 7,
+      minutes: 20,
+      quality: "Excellent",
+    },
+    screenTime: {
+      hours: 5,
+      minutes: 12,
+      status: "High Usage",
+    },
+    activityBars: [
+      { h: 30, active: false },
+      { h: 45, active: false },
+      { h: 55, active: true },
+      { h: 75, active: true },
+      { h: 90, active: true },
+      { h: 65, active: true },
+      { h: 50, active: true },
+    ],
+    goals: [
+      {
+        label: "Cardio",
+        current: 3,
+        target: 5,
+        unit: "days",
+        color: colors.primary,
+      },
+      {
+        label: "Meditation",
+        current: 105,
+        target: 120,
+        unit: "mins",
+        color: "#7C3AED",
+      },
+    ],
+    insight: {
+      beforeHighlight: "Based on your sleep pattern, try to get ",
+      highlight: "15 mins of sunlight",
+      afterHighlight: " within the next hour to boost your circadian rhythm.",
+      isNew: true,
+    },
+  });
+
+  return data;
+}
+
 // ─── Header ─────────────────────────────────────────────────────────
-function Header() {
+function Header({ userName }: { userName: string }) {
+  const dateStr = useMemo(() => getFormattedDate(), []);
+  const greeting = useMemo(() => getGreeting(), []);
+
   return (
     <View
       style={{
@@ -37,7 +196,7 @@ function Header() {
             marginBottom: 2,
           }}
         >
-          Tuesday, 24 Oct
+          {dateStr}
         </Text>
         <Text
           style={{
@@ -46,7 +205,7 @@ function Header() {
             color: colors.textPrimary,
           }}
         >
-          Good Morning, Alex
+          {greeting}, {userName}
         </Text>
       </View>
 
@@ -92,7 +251,7 @@ function Header() {
 }
 
 // ─── Daily Insight Card ─────────────────────────────────────────────
-function DailyInsightCard() {
+function DailyInsightCard({ insight }: { insight: InsightData }) {
   return (
     <View
       style={{
@@ -141,24 +300,26 @@ function DailyInsightCard() {
           >
             DAILY INSIGHT
           </Text>
-          <View
-            style={{
-              backgroundColor: "#E8F5E9",
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-              borderRadius: 8,
-            }}
-          >
-            <Text
+          {insight.isNew && (
+            <View
               style={{
-                fontFamily: typo.family.medium,
-                fontSize: 10,
-                color: colors.success,
+                backgroundColor: "#E8F5E9",
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                borderRadius: 8,
               }}
             >
-              New
-            </Text>
-          </View>
+              <Text
+                style={{
+                  fontFamily: typo.family.medium,
+                  fontSize: 10,
+                  color: colors.success,
+                }}
+              >
+                New
+              </Text>
+            </View>
+          )}
         </View>
         <Text
           style={{
@@ -168,13 +329,13 @@ function DailyInsightCard() {
             lineHeight: 21,
           }}
         >
-          Based on your sleep pattern, try to get{" "}
+          {insight.beforeHighlight}
           <Text
             style={{ fontFamily: typo.family.bold, color: colors.textPrimary }}
           >
-            15 mins of sunlight
-          </Text>{" "}
-          within the next hour to boost your circadian rhythm.
+            {insight.highlight}
+          </Text>
+          {insight.afterHighlight}
         </Text>
       </View>
     </View>
@@ -182,9 +343,8 @@ function DailyInsightCard() {
 }
 
 // ─── Mini sparkline for Steps card ──────────────────────────────────
-function StepsSparkline() {
-  const data = [30, 45, 38, 52, 48, 60, 55, 70, 62, 78, 72, 85];
-  const W = (SCREEN_WIDTH - 72) / 2 - 24; // card inner width roughly
+function StepsSparkline({ data }: { data: number[] }) {
+  const W = (SCREEN_WIDTH - 72) / 2 - 24;
   const H = 40;
   const max = Math.max(...data);
   const min = Math.min(...data);
@@ -211,16 +371,7 @@ function StepsSparkline() {
 }
 
 // ─── Activity mini bar chart ────────────────────────────────────────
-function ActivityBarChart() {
-  const bars = [
-    { h: 30, active: false },
-    { h: 45, active: false },
-    { h: 55, active: true },
-    { h: 75, active: true },
-    { h: 90, active: true },
-    { h: 65, active: true },
-    { h: 50, active: true },
-  ];
+function ActivityBarChart({ bars }: { bars: ActivityBar[] }) {
   const chartH = 80;
 
   return (
@@ -278,8 +429,21 @@ function ActivityBarChart() {
 }
 
 // ─── Metrics Grid (2×2) ────────────────────────────────────────────
-function MetricsGrid() {
-  const cardW = (SCREEN_WIDTH - 52) / 2; // 20px padding each side + 12 gap
+function MetricsGrid({
+  steps,
+  sleep,
+  screenTime,
+  activityBars,
+}: {
+  steps: StepsData;
+  sleep: SleepData;
+  screenTime: ScreenTimeData;
+  activityBars: ActivityBar[];
+}) {
+  const cardW = (SCREEN_WIDTH - 52) / 2;
+  const stepsTrendPositive = steps.trend >= 0;
+  const sleepColor = getSleepQualityColor(sleep.quality);
+  const screenColor = getScreenTimeColor(screenTime.status);
 
   return (
     <View style={{ marginBottom: 24 }}>
@@ -326,7 +490,7 @@ function MetricsGrid() {
               marginTop: 10,
             }}
           >
-            8,240
+            {formatNumber(steps.count)}
           </Text>
           <View
             style={{
@@ -336,18 +500,23 @@ function MetricsGrid() {
               marginTop: 4,
             }}
           >
-            <Ionicons name="trending-up" size={16} color="#10b981" />
+            <Ionicons
+              name={stepsTrendPositive ? "trending-up" : "trending-down"}
+              size={16}
+              color={stepsTrendPositive ? "#10b981" : colors.error}
+            />
             <Text
               style={{
                 fontFamily: typo.family.medium,
                 fontSize: typo.size.caption,
-                color: "#10b981",
+                color: stepsTrendPositive ? "#10b981" : colors.error,
               }}
             >
-              +12% vs avg
+              {stepsTrendPositive ? "+" : ""}
+              {steps.trend}% vs avg
             </Text>
           </View>
-          <StepsSparkline />
+          <StepsSparkline data={steps.sparkline} />
         </View>
 
         {/* Sleep Card */}
@@ -382,11 +551,11 @@ function MetricsGrid() {
               marginTop: 24,
             }}
           >
-            7h 20m
+            {formatDuration(sleep.hours, sleep.minutes)}
           </Text>
           <View
             style={{
-              backgroundColor: "#E8F5E9",
+              backgroundColor: sleep.quality === "Poor" ? "#FEF2F2" : "#E8F5E9",
               alignSelf: "flex-start",
               paddingHorizontal: 12,
               paddingVertical: 4,
@@ -398,10 +567,10 @@ function MetricsGrid() {
               style={{
                 fontFamily: typo.family.medium,
                 fontSize: typo.size.caption,
-                color: "#10b981",
+                color: sleepColor,
               }}
             >
-              Excellent
+              {sleep.quality}
             </Text>
           </View>
         </View>
@@ -444,7 +613,7 @@ function MetricsGrid() {
               marginTop: 10,
             }}
           >
-            5h 12m
+            {formatDuration(screenTime.hours, screenTime.minutes)}
           </Text>
           <View
             style={{
@@ -459,17 +628,17 @@ function MetricsGrid() {
                 width: 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: colors.error,
+                backgroundColor: screenColor,
               }}
             />
             <Text
               style={{
                 fontFamily: typo.family.medium,
                 fontSize: typo.size.caption,
-                color: colors.error,
+                color: screenColor,
               }}
             >
-              High Usage
+              {screenTime.status}
             </Text>
           </View>
         </View>
@@ -498,7 +667,7 @@ function MetricsGrid() {
             </Text>
           </View>
           <View style={{ marginTop: 12 }}>
-            <ActivityBarChart />
+            <ActivityBarChart bars={activityBars} />
           </View>
         </View>
       </View>
@@ -531,7 +700,7 @@ function ProgressBar({ progress, color }: { progress: number; color: string }) {
 }
 
 // ─── Weekly Goals ──────────────────────────────────────────────────
-function WeeklyGoals() {
+function WeeklyGoals({ goals }: { goals: GoalItem[] }) {
   return (
     <View
       style={{
@@ -574,83 +743,66 @@ function WeeklyGoals() {
         </TouchableOpacity>
       </View>
 
-      {/* Cardio */}
-      <View style={{ marginBottom: 16 }}>
+      {goals.map((goal, index) => (
         <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          key={goal.label}
+          style={{ marginBottom: index < goals.length - 1 ? 16 : 0 }}
         >
-          <Text
+          <View
             style={{
-              fontFamily: typo.family.medium,
-              fontSize: typo.size.body,
-              color: colors.textPrimary,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            Cardio
-          </Text>
-          <Text
-            style={{
-              fontFamily: typo.family.medium,
-              fontSize: typo.size.body,
-              color: colors.textSecondary,
-            }}
-          >
-            3/5 days
-          </Text>
+            <Text
+              style={{
+                fontFamily: typo.family.medium,
+                fontSize: typo.size.body,
+                color: colors.textPrimary,
+              }}
+            >
+              {goal.label}
+            </Text>
+            <Text
+              style={{
+                fontFamily: typo.family.medium,
+                fontSize: typo.size.body,
+                color: colors.textSecondary,
+              }}
+            >
+              {goal.current}/{goal.target} {goal.unit}
+            </Text>
+          </View>
+          <ProgressBar
+            progress={goal.current / goal.target}
+            color={goal.color}
+          />
         </View>
-        <ProgressBar progress={3 / 5} color={colors.primary} />
-      </View>
-
-      {/* Meditation */}
-      <View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: typo.family.medium,
-              fontSize: typo.size.body,
-              color: colors.textPrimary,
-            }}
-          >
-            Meditation
-          </Text>
-          <Text
-            style={{
-              fontFamily: typo.family.medium,
-              fontSize: typo.size.body,
-              color: colors.textSecondary,
-            }}
-          >
-            105/120 mins
-          </Text>
-        </View>
-        <ProgressBar progress={105 / 120} color="#7C3AED" />
-      </View>
+      ))}
     </View>
   );
 }
 
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function HomeScreen() {
+  const data = useDashboardData();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <Header />
-        <DailyInsightCard />
-        <MetricsGrid />
-        <WeeklyGoals />
+        <Header userName={data.userName} />
+        <DailyInsightCard insight={data.insight} />
+        <MetricsGrid
+          steps={data.steps}
+          sleep={data.sleep}
+          screenTime={data.screenTime}
+          activityBars={data.activityBars}
+        />
+        <WeeklyGoals goals={data.goals} />
       </ScrollView>
 
       {/* AI Chat FAB */}
