@@ -178,6 +178,16 @@ function Header({ userName }: { userName: string }) {
   const dateStr = useMemo(() => getFormattedDate(), []);
   const greeting = useMemo(() => getGreeting(), []);
 
+function Header() {
+  const { user } = useAuth();
+  const displayName = user?.fullName || "User";
+  const initials =
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U";
   return (
     <View
       style={{
@@ -206,11 +216,10 @@ function Header({ userName }: { userName: string }) {
             color: colors.textPrimary,
           }}
         >
-          {greeting}, {userName}
+          Good Morning, {user?.fullName || "User"}!
         </Text>
       </View>
 
-      {/* Right: bell + avatar */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <TouchableOpacity
           style={{
@@ -244,7 +253,15 @@ function Header({ userName }: { userName: string }) {
             overflow: "hidden",
           }}
         >
-          <Ionicons name="person" size={24} color="#7D6608" />
+          <Text
+            style={{
+              fontFamily: typo.family.bold,
+              fontSize: 16,
+              color: "#7D6608",
+            }}
+          >
+            {initials}
+          </Text>
         </View>
       </View>
     </View>
@@ -796,7 +813,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <Header userName={data.userName} />
+        <Header userName={data.userName ?? "User"} />
         <DailyInsightCard insight={data.insight} />
         <MetricsGrid
           steps={data.steps}

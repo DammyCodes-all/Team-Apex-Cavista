@@ -1,11 +1,22 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 import { View } from "react-native";
+import { Redirect } from "expo-router";
 
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function TabsLayout() {
   const colors = preventionTheme.colors.light;
+  const { isAuthenticated, isHydrating, hasAuthHistory } = useAuth();
+
+  if (isHydrating) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href={hasAuthHistory ? "/auth/login" : "/auth/signup"} />;
+  }
 
   return (
     <Tabs
@@ -170,12 +181,6 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="aiPage"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="pedometer-test"
         options={{
           href: null,
         }}

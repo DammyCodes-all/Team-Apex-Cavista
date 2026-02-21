@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   ScrollView,
   View,
   Text,
@@ -13,6 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { preventionTheme } from "@/constants/tokens";
 import { useAuth } from "@/contexts/auth-context";
+import { useGet } from "@/hooks/use-api-methods";
+import { getErrorMessage } from "@/lib/api/client";
+import { type ProfileResponse, updateProfile } from "@/lib/api/profile";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
@@ -21,9 +23,11 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 // ─── Top Header (back arrow + Edit/Save) ──────────────────────────
 function TopHeader({
   isEditing,
+  isSaving,
   onToggleEdit,
 }: {
   isEditing: boolean;
+  isSaving: boolean;
   onToggleEdit: () => void;
 }) {
   return (
@@ -39,7 +43,7 @@ function TopHeader({
       <TouchableOpacity>
         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={onToggleEdit}>
+      <TouchableOpacity onPress={onToggleEdit} disabled={isSaving}>
         <Text
           style={{
             fontFamily: typo.family.medium,
@@ -48,7 +52,7 @@ function TopHeader({
             color: isEditing ? colors.success : colors.primary,
           }}
         >
-          {isEditing ? "Save" : "Edit"}
+          {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -56,7 +60,12 @@ function TopHeader({
 }
 
 // ─── Avatar Section ────────────────────────────────────────────────
-function AvatarSection() {
+function AvatarSection({ name, subtitle }: { name: string; subtitle: string }) {
+  const avatarInitial =
+    name.trim().charAt(0).toUpperCase() ||
+    subtitle.trim().charAt(0).toUpperCase() ||
+    "U";
+
   return (
     <View style={{ alignItems: "center", marginBottom: 28 }}>
       <Text
@@ -86,25 +95,16 @@ function AvatarSection() {
             overflow: "hidden",
           }}
         >
-          <Ionicons name="person" size={56} color="#5BA68A" />
-        </View>
-        {/* Camera badge */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            backgroundColor: colors.primary,
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor: colors.card,
-          }}
-        >
-          <Ionicons name="camera" size={14} color="#fff" />
+          <Text
+            style={{
+              fontFamily: typo.family.bold,
+              fontSize: 44,
+              lineHeight: 52,
+              color: "#5BA68A",
+            }}
+          >
+            {avatarInitial}
+          </Text>
         </View>
       </View>
 
@@ -117,7 +117,7 @@ function AvatarSection() {
           marginBottom: 2,
         }}
       >
-        Alex Doe
+        {name}
       </Text>
       <Text
         style={{
@@ -127,7 +127,7 @@ function AvatarSection() {
           color: colors.textSecondary,
         }}
       >
-        Premium Member since Jan 2023
+        {subtitle}
       </Text>
     </View>
   );
@@ -444,15 +444,40 @@ function PersonalInfo({
 }
 
 // ─── Preferences ───────────────────────────────────────────────────
-function Preferences() {
-  const [aiDaily, setAiDaily] = useState(true);
-  const [healthKit, setHealthKit] = useState(true);
-  const [shareAnon, setShareAnon] = useState(false);
-
+function Preferences({
+  trackingSleep,
+  trackingSteps,
+  trackingScreenTime,
+  trackingVoiceStress,
+  onToggle,
+}: {
+  trackingSleep: boolean;
+  trackingSteps: boolean;
+  trackingScreenTime: boolean;
+  trackingVoiceStress: boolean;
+  onToggle: (key: "sleep" | "steps" | "screenTime" | "voiceStress") => void;
+}) {
   const toggles = [
-    { label: "AI Daily Analysis", value: aiDaily, setter: setAiDaily },
-    { label: "HealthKit Sync", value: healthKit, setter: setHealthKit },
-    { label: "Share Anonymous Data", value: shareAnon, setter: setShareAnon },
+    {
+      label: "AI Daily Analysis",
+      value: trackingSleep,
+      onPress: () => onToggle("sleep"),
+    },
+    {
+      label: "HealthKit Sync",
+      value: trackingSteps,
+      onPress: () => onToggle("steps"),
+    },
+    {
+      label: "Share Anonymous Data",
+      value: trackingScreenTime,
+      onPress: () => onToggle("screenTime"),
+    },
+    {
+      label: "Voice Stress Insights",
+      value: trackingVoiceStress,
+      onPress: () => onToggle("voiceStress"),
+    },
   ];
 
   return (
@@ -514,7 +539,7 @@ function Preferences() {
             </Text>
             <Switch
               value={item.value}
-              onValueChange={item.setter}
+              onValueChange={item.onPress}
               trackColor={{ false: "#E0E0E0", true: colors.primary }}
               thumbColor="#FFFFFF"
             />
@@ -525,27 +550,11 @@ function Preferences() {
   );
 }
 
-// ─── Log Out + Version ─────────────────────────────────────────────
 function Footer({ onLogOut }: { onLogOut: () => void }) {
-  const handleLogOut = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: onLogOut,
-        },
-      ],
-    );
-  };
-
   return (
     <View style={{ alignItems: "center", marginBottom: 24 }}>
       <TouchableOpacity
-        onPress={handleLogOut}
+        onPress={onLogOut}
         style={{
           width: "100%",
           paddingVertical: 14,
@@ -589,17 +598,55 @@ function Footer({ onLogOut }: { onLogOut: () => void }) {
 
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function ProfileTabScreen() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState<ProfileData>({
-    name: "Alex Doe",
-    age: "34",
-    height: "175",
-    weight: "68",
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [preferences, setPreferences] = useState({
+    trackingSleep: true,
+    trackingSteps: true,
+    trackingScreenTime: true,
+    trackingVoiceStress: false,
   });
+  const { data: profile, execute: fetchProfile } =
+    useGet<ProfileResponse>("/profile");
 
-  const handleToggleEdit = () => {
-    setIsEditing((prev) => !prev);
+  const handleToggleEdit = async () => {
+    if (!isEditing) {
+      setSaveError(null);
+      setIsEditing(true);
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    const parseNumber = (value: string, fallback = 0) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    try {
+      await updateProfile({
+        name: profileData?.name.trim() || user?.fullName || "",
+        age: parseNumber(profileData?.age || ""),
+        gender: profile?.gender ?? "",
+        height_cm: parseNumber(profileData?.height || ""),
+        weight_kg: parseNumber(profileData?.weight || ""),
+        tracking_sleep: preferences.trackingSleep,
+        tracking_steps: preferences.trackingSteps,
+        tracking_screen_time: preferences.trackingScreenTime,
+        tracking_voice_stress: preferences.trackingVoiceStress,
+        goals_selected: [],
+        goals_custom: "",
+      });
+      setIsEditing(false);
+    } catch (error) {
+      setSaveError(getErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogOut = async () => {
@@ -607,7 +654,61 @@ export default function ProfileTabScreen() {
   };
 
   const handleChangeField = (field: keyof ProfileData, value: string) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }));
+    setProfileData((prev) => {
+      const baseProfile: ProfileData = prev ?? {
+        name: "",
+        age: "",
+        height: "",
+        weight: "",
+      };
+
+      return { ...baseProfile, [field]: value };
+    });
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    const resolvedName = profile.name || user?.fullName || "";
+
+    setProfileData({
+      name: resolvedName,
+      age: profile.age ? String(profile.age) : "",
+      height: profile.height_cm ? String(profile.height_cm) : "",
+      weight: profile.weight_kg ? String(profile.weight_kg) : "",
+    });
+
+    setPreferences({
+      trackingSleep: profile.tracking_sleep,
+      trackingSteps: profile.tracking_steps,
+      trackingScreenTime: profile.tracking_screen_time,
+      trackingVoiceStress: profile.tracking_voice_stress,
+    });
+  }, [profile, user?.fullName]);
+
+  const displayName = profileData?.name || user?.fullName || "Profile";
+  const displaySubtitle = profile?.email || user?.email || "Premium Member";
+  const handleTogglePreference = (
+    key: "sleep" | "steps" | "screenTime" | "voiceStress",
+  ) => {
+    setPreferences((prev) => {
+      if (key === "sleep") {
+        return { ...prev, trackingSleep: !prev.trackingSleep };
+      }
+      if (key === "steps") {
+        return { ...prev, trackingSteps: !prev.trackingSteps };
+      }
+      if (key === "screenTime") {
+        return { ...prev, trackingScreenTime: !prev.trackingScreenTime };
+      }
+      return { ...prev, trackingVoiceStress: !prev.trackingVoiceStress };
+    });
   };
 
   return (
@@ -616,15 +717,39 @@ export default function ProfileTabScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <TopHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} />
-        <AvatarSection />
+        <TopHeader
+          isEditing={isEditing}
+          isSaving={isSaving}
+          onToggleEdit={handleToggleEdit}
+        />
+        {saveError ? (
+          <Text
+            style={{
+              color: colors.error,
+              fontFamily: typo.family.body,
+              fontSize: typo.size.caption,
+              marginBottom: 8,
+            }}
+          >
+            {saveError}
+          </Text>
+        ) : null}
+        <AvatarSection name={displayName} subtitle={displaySubtitle} />
         <BaselineSummary />
         <PersonalInfo
           isEditing={isEditing}
-          profileData={profileData}
+          profileData={
+            profileData ?? { name: "", age: "", height: "", weight: "" }
+          }
           onChangeField={handleChangeField}
         />
-        <Preferences />
+        <Preferences
+          trackingSleep={preferences.trackingSleep}
+          trackingSteps={preferences.trackingSteps}
+          trackingScreenTime={preferences.trackingScreenTime}
+          trackingVoiceStress={preferences.trackingVoiceStress}
+          onToggle={handleTogglePreference}
+        />
         <Footer onLogOut={handleLogOut} />
       </ScrollView>
     </SafeAreaView>

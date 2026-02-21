@@ -13,6 +13,7 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 import { getErrorMessage } from "@/lib/api/client";
 import { updateProfile } from "@/lib/api/profile";
 import { useOnboardingStore } from "@/stores/onboarding-store";
@@ -172,6 +173,7 @@ export default function OnboardingStepFive() {
   const [isSubmitting, setIsSubmitting] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Get all collected data from the store
   const getOnboardingData = useOnboardingStore(
@@ -181,13 +183,15 @@ export default function OnboardingStepFive() {
 
   const submitProfile = useCallback(async () => {
     const onboardingData = getOnboardingData();
+    const resolvedName =
+      onboardingData.personalInfo.name.trim() || user?.fullName || "";
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      await updateProfile({
-        name: onboardingData.personalInfo.name,
+      console.log({
+        name: resolvedName,
         age: onboardingData.personalInfo.age,
         gender: onboardingData.personalInfo.gender ?? "",
         height_cm: onboardingData.personalInfo.height,
@@ -197,6 +201,19 @@ export default function OnboardingStepFive() {
         tracking_screen_time: onboardingData.permissions.screenTime,
         tracking_voice_stress: onboardingData.permissions.voiceStress,
       });
+      await updateProfile({
+        name: resolvedName,
+        age: onboardingData.personalInfo.age,
+        gender: onboardingData.personalInfo.gender ?? "",
+        height_cm: onboardingData.personalInfo.height,
+        weight_kg: onboardingData.personalInfo.weight,
+        tracking_sleep: onboardingData.permissions.sleep,
+        tracking_steps: onboardingData.permissions.steps,
+        tracking_screen_time: onboardingData.permissions.screenTime,
+        tracking_voice_stress: onboardingData.permissions.voiceStress,
+        goals_selected: onboardingData.goals.selected,
+        goals_custom: onboardingData.goals.custom,
+      });
 
       setIsSaved(true);
       resetOnboarding();
@@ -205,7 +222,7 @@ export default function OnboardingStepFive() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [getOnboardingData, resetOnboarding]);
+  }, [getOnboardingData, resetOnboarding, user?.fullName]);
 
   useEffect(() => {
     void submitProfile();
