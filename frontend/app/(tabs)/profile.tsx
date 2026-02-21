@@ -61,6 +61,11 @@ function TopHeader({
 
 // ─── Avatar Section ────────────────────────────────────────────────
 function AvatarSection({ name, subtitle }: { name: string; subtitle: string }) {
+  const avatarInitial =
+    name.trim().charAt(0).toUpperCase() ||
+    subtitle.trim().charAt(0).toUpperCase() ||
+    "U";
+
   return (
     <View style={{ alignItems: "center", marginBottom: 28 }}>
       <Text
@@ -90,25 +95,16 @@ function AvatarSection({ name, subtitle }: { name: string; subtitle: string }) {
             overflow: "hidden",
           }}
         >
-          <Ionicons name="person" size={56} color="#5BA68A" />
-        </View>
-        {/* Camera badge */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            backgroundColor: colors.primary,
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor: colors.card,
-          }}
-        >
-          <Ionicons name="camera" size={14} color="#fff" />
+          <Text
+            style={{
+              fontFamily: typo.family.bold,
+              fontSize: 44,
+              lineHeight: 52,
+              color: "#5BA68A",
+            }}
+          >
+            {avatarInitial}
+          </Text>
         </View>
       </View>
 
@@ -606,12 +602,7 @@ export default function ProfileTabScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<ProfileData>({
-    name: "Alex Doe",
-    age: "34",
-    height: "175",
-    weight: "68",
-  });
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [preferences, setPreferences] = useState({
     trackingSleep: true,
     trackingSteps: true,
@@ -638,11 +629,11 @@ export default function ProfileTabScreen() {
 
     try {
       await updateProfile({
-        name: profileData.name.trim() || user?.fullName || "",
-        age: parseNumber(profileData.age),
+        name: profileData?.name.trim() || user?.fullName || "",
+        age: parseNumber(profileData?.age || ""),
         gender: profile?.gender ?? "",
-        height_cm: parseNumber(profileData.height),
-        weight_kg: parseNumber(profileData.weight),
+        height_cm: parseNumber(profileData?.height || ""),
+        weight_kg: parseNumber(profileData?.weight || ""),
         tracking_sleep: preferences.trackingSleep,
         tracking_steps: preferences.trackingSteps,
         tracking_screen_time: preferences.trackingScreenTime,
@@ -663,7 +654,16 @@ export default function ProfileTabScreen() {
   };
 
   const handleChangeField = (field: keyof ProfileData, value: string) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }));
+    setProfileData((prev) => {
+      const baseProfile: ProfileData = prev ?? {
+        name: "",
+        age: "",
+        height: "",
+        weight: "",
+      };
+
+      return { ...baseProfile, [field]: value };
+    });
   };
 
   useEffect(() => {
@@ -692,7 +692,7 @@ export default function ProfileTabScreen() {
     });
   }, [profile, user?.fullName]);
 
-  const displayName = profileData.name || user?.fullName || "Profile";
+  const displayName = profileData?.name || user?.fullName || "Profile";
   const displaySubtitle = profile?.email || user?.email || "Premium Member";
   const handleTogglePreference = (
     key: "sleep" | "steps" | "screenTime" | "voiceStress",
@@ -738,7 +738,9 @@ export default function ProfileTabScreen() {
         <BaselineSummary />
         <PersonalInfo
           isEditing={isEditing}
-          profileData={profileData}
+          profileData={
+            profileData ?? { name: "", age: "", height: "", weight: "" }
+          }
           onChangeField={handleChangeField}
         />
         <Preferences
