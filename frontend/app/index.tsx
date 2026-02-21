@@ -10,7 +10,7 @@ export default function IndexRoute() {
   }
 
   if (isAuthenticated) {
-    return <Redirect href="/onboarding/step-1" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   return <Redirect href={hasAuthHistory ? "/auth/login" : "/auth/signup"} />;
