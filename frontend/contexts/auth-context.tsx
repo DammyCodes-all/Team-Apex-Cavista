@@ -101,41 +101,47 @@ type SignupErrorResponse = {
 type LoginErrorResponse = {
   message?: string;
   error?: string;
-  detail?: ValidationDetail[];
+  detail?: ValidationDetail[] | string;
+};
+
+const extractApiErrorMessage = <T extends { message?: string; error?: string; detail?: ValidationDetail[] | string }>(
+  caughtError: unknown,
+  fallback: string,
+) => {
+  if (isAxiosError<T>(caughtError)) {
+    const detail = caughtError.response?.data?.detail;
+    const detailMessage =
+      typeof detail === "string"
+        ? detail
+        : Array.isArray(detail)
+          ? detail.find((item) => item?.msg)?.msg
+          : undefined;
+
+    const message = caughtError.response?.data?.message;
+    const error = caughtError.response?.data?.error;
+
+    return detailMessage ?? message ?? error ?? caughtError.message ?? fallback;
+  }
+
+  if (caughtError instanceof Error) {
+    return caughtError.message;
+  }
+
+  return fallback;
 };
 
 const getLoginErrorMessage = (caughtError: unknown) => {
-  if (isAxiosError<LoginErrorResponse>(caughtError)) {
-    const detailMessage = caughtError.response?.data?.detail?.[0]?.msg;
-    const message = caughtError.response?.data?.message;
-    const error = caughtError.response?.data?.error;
-
-    return detailMessage ?? message ?? error ?? "Unable to sign in right now";
-  }
-
-  if (caughtError instanceof Error) {
-    return caughtError.message;
-  }
-
-  return "Unable to sign in right now";
+  return extractApiErrorMessage<LoginErrorResponse>(
+    caughtError,
+    "Unable to sign in right now",
+  );
 };
 
 const getSignupErrorMessage = (caughtError: unknown) => {
-  if (isAxiosError<SignupErrorResponse>(caughtError)) {
-    const detailMessage = caughtError.response?.data?.detail?.[0]?.msg;
-    const message = caughtError.response?.data?.message;
-    const error = caughtError.response?.data?.error;
-
-    return (
-      detailMessage ?? message ?? error ?? "Unable to create account right now"
-    );
-  }
-
-  if (caughtError instanceof Error) {
-    return caughtError.message;
-  }
-
-  return "Unable to create account right now";
+  return extractApiErrorMessage<SignupErrorResponse>(
+    caughtError,
+    "Unable to create account right now",
+  );
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -260,9 +266,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    setSession(null);
+    setIsLoading(true);
     setError(null);
-    await persistSession(null);
+
+    try {
+      await post<string>("/auth/logout");
+    } catch {
+      // Always clear local session even if logout request fails.
+    } finally {
+      setSession(null);
+      await persistSession(null);
+      setIsLoading(false);
+    }
   }, [persistSession]);
 
   const clearError = useCallback(() => {

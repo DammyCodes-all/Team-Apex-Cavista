@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   SafeAreaView,
@@ -153,11 +153,15 @@ export default function OnboardingStepFour() {
   );
 
   const [showCustomGoalModal, setShowCustomGoalModal] = useState(false);
+  const [goalError, setGoalError] = useState<string | null>(null);
 
   const toggleGoal = (goalId: GoalId) => {
     if (goalId === "custom") {
       setShowCustomGoalModal(true);
       return;
+    }
+    if (goalError) {
+      setGoalError(null);
     }
     setSelectedGoals(
       selectedGoals.includes(goalId)
@@ -168,6 +172,9 @@ export default function OnboardingStepFour() {
 
   const saveCustomGoal = () => {
     if (customGoalText.trim()) {
+      if (goalError) {
+        setGoalError(null);
+      }
       setSelectedGoals(
         selectedGoals.includes("custom")
           ? selectedGoals
@@ -175,6 +182,16 @@ export default function OnboardingStepFour() {
       );
       setShowCustomGoalModal(false);
     }
+  };
+
+  const handleContinue = () => {
+    if (selectedGoals.length === 0) {
+      setGoalError("Please select at least one goal to continue");
+      return;
+    }
+
+    setGoalError(null);
+    router.push("/onboarding/step-5");
   };
 
   const renderGoalRows = () => {
@@ -266,26 +283,38 @@ export default function OnboardingStepFour() {
               Select at least 1 goal
             </Text>
 
-            <Link href="/onboarding/step-5" asChild>
-              <TouchableOpacity
-                className="h-14 items-center justify-center rounded-button"
+            {goalError ? (
+              <Text
+                className="text-center"
                 style={{
-                  backgroundColor: colors.primary,
-                  opacity: selectedGoals.length > 0 ? 1 : 0.5,
+                  color: colors.error,
+                  fontSize: 12,
+                  fontFamily: preventionTheme.typography.family.body,
+                  marginBottom: 10,
                 }}
-                disabled={selectedGoals.length === 0}
               >
-                <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontSize: 18,
-                    fontFamily: preventionTheme.typography.family.medium,
-                  }}
-                >
-                  Continue
-                </Text>
-              </TouchableOpacity>
-            </Link>
+                {goalError}
+              </Text>
+            ) : null}
+
+            <TouchableOpacity
+              onPress={handleContinue}
+              className="h-14 items-center justify-center rounded-button"
+              style={{
+                backgroundColor: colors.primary,
+                opacity: selectedGoals.length > 0 ? 1 : 0.5,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 18,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
+              >
+                Continue
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </OnboardingSwipeView>
