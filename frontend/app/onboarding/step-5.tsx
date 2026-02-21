@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   SafeAreaView,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 
 interface SetupItem {
   icon: string;
@@ -165,6 +166,26 @@ function TimelineItemCard({ item }: { item: TimelineItem }) {
 export default function OnboardingStepFive() {
   const colors = preventionTheme.colors.light;
 
+  // Get all collected data from the store
+  const getOnboardingData = useOnboardingStore(
+    (state) => state.getOnboardingData,
+  );
+  const resetOnboarding = useOnboardingStore((state) => state.resetOnboarding);
+
+  const onboardingData = getOnboardingData();
+
+  const handleSubmit = async () => {
+    // Log the data (in production, this would send to backend)
+    console.log("Onboarding Data:", onboardingData);
+
+    // TODO: Send onboardingData to backend API
+    // await submitOnboarding(onboardingData);
+
+    // Reset the store and navigate to home
+    resetOnboarding();
+    router.replace("/");
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
       <OnboardingSwipeView step={5} totalSteps={5}>
@@ -279,22 +300,21 @@ export default function OnboardingStepFive() {
           </View>
 
           <View className="mt-l pt-l">
-            <Link href="/" asChild>
-              <TouchableOpacity
-                className="h-14 items-center justify-center rounded-button"
-                style={{ backgroundColor: colors.primary }}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              className="h-14 items-center justify-center rounded-button"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 18,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
               >
-                <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontSize: 18,
-                    fontFamily: preventionTheme.typography.family.medium,
-                  }}
-                >
-                  Start Using Prevention
-                </Text>
-              </TouchableOpacity>
-            </Link>
+                Start Using Prevention
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </OnboardingSwipeView>

@@ -18,7 +18,24 @@ import { useOnboardingStore } from "@/stores/onboarding-store";
 
 export default function OnboardingStepThree() {
   const colors = preventionTheme.colors.light;
-  const [selectedGender, setSelectedGender] = useState<string | null>(null);
+
+  // Form state from global store
+  const name = useOnboardingStore((state) => state.name);
+  const setName = useOnboardingStore((state) => state.setName);
+
+  const age = useOnboardingStore((state) => state.age);
+  const setAge = useOnboardingStore((state) => state.setAge);
+
+  const gender = useOnboardingStore((state) => state.gender);
+  const setGender = useOnboardingStore((state) => state.setGender);
+
+  const height = useOnboardingStore((state) => state.height);
+  const setHeight = useOnboardingStore((state) => state.setHeight);
+
+  const weight = useOnboardingStore((state) => state.weight);
+  const setWeight = useOnboardingStore((state) => state.setWeight);
+
+  // Local modal state
   const [showGenderModal, setShowGenderModal] = useState(false);
 
   const GENDER_OPTIONS = [
@@ -103,6 +120,8 @@ export default function OnboardingStepThree() {
                 <TextInput
                   placeholder="Your name"
                   placeholderTextColor="#8A9CB1"
+                  value={name}
+                  onChangeText={setName}
                   style={{
                     flex: 1,
                     marginLeft: 12,
@@ -132,6 +151,8 @@ export default function OnboardingStepThree() {
                   placeholder="Age"
                   placeholderTextColor="#8A9CB1"
                   keyboardType="number-pad"
+                  value={age}
+                  onChangeText={setAge}
                   style={{
                     flex: 1,
                     marginLeft: 12,
@@ -162,14 +183,14 @@ export default function OnboardingStepThree() {
                 <Text
                   style={{
                     marginLeft: 12,
-                    color: selectedGender ? "#2D3449" : "#8A9CB1",
+                    color: gender ? "#2D3449" : "#8A9CB1",
                     fontSize: 16,
                     fontFamily: preventionTheme.typography.family.body,
                     flex: 1,
                   }}
                 >
-                  {selectedGender
-                    ? GENDER_OPTIONS.find((g) => g.id === selectedGender)?.label
+                  {gender
+                    ? GENDER_OPTIONS.find((g) => g.id === gender)?.label
                     : "Select gender"}
                 </Text>
                 <MaterialIcons
@@ -194,6 +215,8 @@ export default function OnboardingStepThree() {
                   placeholder="Height (ft/in)"
                   placeholderTextColor="#8A9CB1"
                   keyboardType="decimal-pad"
+                  value={height}
+                  onChangeText={setHeight}
                   style={{
                     flex: 1,
                     marginLeft: 12,
@@ -232,6 +255,8 @@ export default function OnboardingStepThree() {
                   placeholder="Weight (lbs)"
                   placeholderTextColor="#8A9CB1"
                   keyboardType="decimal-pad"
+                  value={weight}
+                  onChangeText={setWeight}
                   style={{
                     flex: 1,
                     marginLeft: 12,
@@ -385,19 +410,17 @@ export default function OnboardingStepThree() {
                     <TouchableOpacity
                       key={option.id}
                       onPress={() => {
-                        setSelectedGender(option.id);
+                        setGender(option.id);
                         setShowGenderModal(false);
                       }}
                       activeOpacity={0.8}
                       className="flex-row items-center rounded-2xl"
                       style={{
                         backgroundColor:
-                          selectedGender === option.id ? "#E8F4F9" : "#F5F8FB",
+                          gender === option.id ? "#E8F4F9" : "#F5F8FB",
                         borderWidth: 2,
                         borderColor:
-                          selectedGender === option.id
-                            ? colors.primary
-                            : "#D3DEE8",
+                          gender === option.id ? colors.primary : "#D3DEE8",
                         paddingHorizontal: 16,
                         paddingVertical: 14,
                       }}
@@ -406,18 +429,14 @@ export default function OnboardingStepThree() {
                         name={option.icon as any}
                         size={24}
                         color={
-                          selectedGender === option.id
-                            ? colors.primary
-                            : "#90A2B7"
+                          gender === option.id ? colors.primary : "#90A2B7"
                         }
                       />
                       <Text
                         style={{
                           marginLeft: 12,
                           color:
-                            selectedGender === option.id
-                              ? colors.primary
-                              : "#2D3449",
+                            gender === option.id ? colors.primary : "#2D3449",
                           fontSize: 16,
                           fontFamily: preventionTheme.typography.family.medium,
                           flex: 1,
@@ -426,7 +445,7 @@ export default function OnboardingStepThree() {
                         {option.label}
                       </Text>
 
-                      {selectedGender === option.id && (
+                      {gender === option.id && (
                         <MaterialIcons
                           name="check-circle"
                           size={20}

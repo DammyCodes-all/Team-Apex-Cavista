@@ -14,6 +14,7 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 
 type GoalId = "sleep" | "active" | "stress" | "focus" | "health" | "custom";
 
@@ -141,26 +142,36 @@ function GoalCard({
 
 export default function OnboardingStepFour() {
   const colors = preventionTheme.colors.light;
-  const [selectedGoals, setSelectedGoals] = useState<GoalId[]>([]);
+
+  const selectedGoals = useOnboardingStore((state) => state.selectedGoals);
+  const setSelectedGoals = useOnboardingStore(
+    (state) => state.setSelectedGoals,
+  );
+  const customGoalText = useOnboardingStore((state) => state.customGoalText);
+  const setCustomGoalText = useOnboardingStore(
+    (state) => state.setCustomGoalText,
+  );
+
   const [showCustomGoalModal, setShowCustomGoalModal] = useState(false);
-  const [customGoalText, setCustomGoalText] = useState("");
 
   const toggleGoal = (goalId: GoalId) => {
     if (goalId === "custom") {
       setShowCustomGoalModal(true);
       return;
     }
-    setSelectedGoals((prev) =>
-      prev.includes(goalId)
-        ? prev.filter((id) => id !== goalId)
-        : [...prev, goalId],
+    setSelectedGoals(
+      selectedGoals.includes(goalId)
+        ? selectedGoals.filter((id) => id !== goalId)
+        : [...selectedGoals, goalId],
     );
   };
 
   const saveCustomGoal = () => {
     if (customGoalText.trim()) {
-      setSelectedGoals((prev) =>
-        prev.includes("custom") ? prev : [...prev, "custom"],
+      setSelectedGoals(
+        selectedGoals.includes("custom")
+          ? selectedGoals
+          : [...selectedGoals, "custom"],
       );
       setShowCustomGoalModal(false);
     }
