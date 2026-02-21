@@ -68,6 +68,77 @@ const GOALS: {
   },
 ];
 
+interface GoalCardProps {
+  goal: (typeof GOALS)[0];
+  isSelected: boolean;
+  customGoalText: string;
+  primaryColor: string;
+  onPress: () => void;
+}
+
+function GoalCard({
+  goal,
+  isSelected,
+  customGoalText,
+  primaryColor,
+  onPress,
+}: GoalCardProps) {
+  const isCustomGoal = goal.id === "custom" && customGoalText;
+  const displayTitle = isCustomGoal ? customGoalText : goal.title;
+  const displaySubtitle = isCustomGoal ? "Your custom priority" : goal.subtitle;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      className="flex-1 rounded-3xl"
+      style={{
+        backgroundColor: isSelected ? "#E8F4F9" : "#FFFFFF",
+        borderWidth: isSelected ? 2 : 1,
+        borderColor: isSelected ? primaryColor : "#D8E4EC",
+        paddingHorizontal: 12,
+        paddingVertical: 16,
+      }}
+    >
+      <Text style={{ fontSize: 42, marginBottom: 8 }}>{goal.emoji}</Text>
+      <Text
+        style={{
+          color: "#2D3449",
+          fontSize: 18,
+          fontFamily: preventionTheme.typography.family.semiBold,
+        }}
+      >
+        {displayTitle}
+      </Text>
+      <Text
+        style={{
+          color: "#60718A",
+          fontSize: 12,
+          fontFamily: preventionTheme.typography.family.body,
+          marginTop: 6,
+        }}
+      >
+        {displaySubtitle}
+      </Text>
+
+      {isSelected && (
+        <View
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: primaryColor,
+            borderRadius: 12,
+            padding: 2,
+          }}
+        >
+          <MaterialIcons name="check" size={16} color="#FFFFFF" />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
 export default function OnboardingStepFour() {
   const colors = preventionTheme.colors.light;
   const [selectedGoals, setSelectedGoals] = useState<GoalId[]>([]);
@@ -93,6 +164,27 @@ export default function OnboardingStepFour() {
       );
       setShowCustomGoalModal(false);
     }
+  };
+
+  const renderGoalRows = () => {
+    const rows = [];
+    for (let i = 0; i < GOALS.length; i += 2) {
+      rows.push(
+        <View key={`row-${i}`} style={{ flexDirection: "row", gap: 12 }}>
+          {GOALS.slice(i, i + 2).map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              isSelected={selectedGoals.includes(goal.id)}
+              customGoalText={customGoalText}
+              primaryColor={colors.primary}
+              onPress={() => toggleGoal(goal.id)}
+            />
+          ))}
+        </View>,
+      );
+    }
+    return rows;
   };
 
   return (
@@ -147,190 +239,7 @@ export default function OnboardingStepFour() {
           </View>
 
           <View className="mt-l" style={{ gap: 12 }}>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {GOALS.slice(0, 2).map((goal) => {
-                const isSelected = selectedGoals.includes(goal.id);
-                return (
-                  <TouchableOpacity
-                    key={goal.id}
-                    onPress={() => toggleGoal(goal.id)}
-                    activeOpacity={0.8}
-                    className="flex-1 rounded-3xl"
-                    style={{
-                      backgroundColor: isSelected ? "#E8F4F9" : "#FFFFFF",
-                      borderWidth: isSelected ? 2 : 1,
-                      borderColor: isSelected ? colors.primary : "#D8E4EC",
-                      paddingHorizontal: 12,
-                      paddingVertical: 16,
-                    }}
-                  >
-                    <Text style={{ fontSize: 42, marginBottom: 8 }}>
-                      {goal.emoji}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#2D3449",
-                        fontSize: 18,
-                        fontFamily: preventionTheme.typography.family.semiBold,
-                      }}
-                    >
-                      {goal.title}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#60718A",
-                        fontSize: 12,
-                        fontFamily: preventionTheme.typography.family.body,
-                        marginTop: 6,
-                      }}
-                    >
-                      {goal.subtitle}
-                    </Text>
-
-                    {isSelected && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          backgroundColor: colors.primary,
-                          borderRadius: 12,
-                          padding: 2,
-                        }}
-                      >
-                        <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {GOALS.slice(2, 4).map((goal) => {
-                const isSelected = selectedGoals.includes(goal.id);
-                return (
-                  <TouchableOpacity
-                    key={goal.id}
-                    onPress={() => toggleGoal(goal.id)}
-                    activeOpacity={0.8}
-                    className="flex-1 rounded-3xl"
-                    style={{
-                      backgroundColor: isSelected ? "#E8F4F9" : "#FFFFFF",
-                      borderWidth: isSelected ? 2 : 1,
-                      borderColor: isSelected ? colors.primary : "#D8E4EC",
-                      paddingHorizontal: 12,
-                      paddingVertical: 16,
-                    }}
-                  >
-                    <Text style={{ fontSize: 42, marginBottom: 8 }}>
-                      {goal.emoji}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#2D3449",
-                        fontSize: 18,
-                        fontFamily: preventionTheme.typography.family.semiBold,
-                      }}
-                    >
-                      {goal.id === "custom" && customGoalText
-                        ? customGoalText
-                        : goal.title}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#60718A",
-                        fontSize: 12,
-                        fontFamily: preventionTheme.typography.family.body,
-                        marginTop: 6,
-                      }}
-                    >
-                      {goal.id === "custom" && customGoalText
-                        ? "Your custom priority"
-                        : goal.subtitle}
-                    </Text>
-
-                    {isSelected && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          backgroundColor: colors.primary,
-                          borderRadius: 12,
-                          padding: 2,
-                        }}
-                      >
-                        <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {GOALS.slice(4, 6).map((goal) => {
-                const isSelected = selectedGoals.includes(goal.id);
-                return (
-                  <TouchableOpacity
-                    key={goal.id}
-                    onPress={() => toggleGoal(goal.id)}
-                    activeOpacity={0.8}
-                    className="flex-1 rounded-3xl"
-                    style={{
-                      backgroundColor: isSelected ? "#E8F4F9" : "#FFFFFF",
-                      borderWidth: isSelected ? 2 : 1,
-                      borderColor: isSelected ? colors.primary : "#D8E4EC",
-                      paddingHorizontal: 12,
-                      paddingVertical: 16,
-                    }}
-                  >
-                    <Text style={{ fontSize: 42, marginBottom: 8 }}>
-                      {goal.emoji}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#2D3449",
-                        fontSize: 18,
-                        fontFamily: preventionTheme.typography.family.semiBold,
-                      }}
-                    >
-                      {goal.id === "custom" && customGoalText
-                        ? customGoalText
-                        : goal.title}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#60718A",
-                        fontSize: 12,
-                        fontFamily: preventionTheme.typography.family.body,
-                        marginTop: 6,
-                      }}
-                    >
-                      {goal.id === "custom" && customGoalText
-                        ? "Your custom priority"
-                        : goal.subtitle}
-                    </Text>
-
-                    {isSelected && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          backgroundColor: colors.primary,
-                          borderRadius: 12,
-                          padding: 2,
-                        }}
-                      >
-                        <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            {renderGoalRows()}
           </View>
 
           <View className="mt-auto pt-l">

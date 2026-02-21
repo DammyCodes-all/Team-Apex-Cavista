@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   SafeAreaView,
   Switch,
@@ -11,6 +11,7 @@ import {
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 
 type PermissionKey =
   | "steps"
