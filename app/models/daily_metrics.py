@@ -2,16 +2,15 @@
 Daily Metrics Pydantic Models for Prevention AI Data Ingestion.
 
 Daily passive health data collected from user devices/wearables.
-This is the raw data source for baseline learning.
+This is the raw data source for baseline learning and AI engine input.
 """
 from pydantic import BaseModel, Field
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class DailyMetricsCreate(BaseModel):
-    """Request schema for submitting daily metrics."""
-    user_id: str
+    """Request schema for submitting daily metrics (user_id auto-filled from auth)."""
     date: date  # Date of the metrics (YYYY-MM-DD)
     steps: int = Field(ge=0, description="Daily step count")
     sleep_duration_minutes: int = Field(ge=0, description="Total sleep in minutes")
@@ -31,6 +30,9 @@ class DailyMetricsResponse(BaseModel):
     active_minutes: int
     created_at: datetime
     updated_at: datetime
+    # AI engine fields (populated only if baseline_status=="active")
+    deviation_flags: Optional[Dict[str, bool]] = Field(default=None, description="Deviation flags per signal")
+    risk_score: Optional[float] = Field(default=None, description="Risk score 0-100 (when baseline active)")
 
     class Config:
         from_attributes = True
@@ -43,3 +45,4 @@ class DailyMetricsUpdate(BaseModel):
     sedentary_minutes: Optional[int] = None
     location_diversity_score: Optional[float] = None
     active_minutes: Optional[int] = None
+
