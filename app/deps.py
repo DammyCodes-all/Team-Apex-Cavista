@@ -4,11 +4,16 @@ from app.utils.jwt import verify_token
 from app.db.client import get_database
 from bson import ObjectId
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), request: Request = None):
-    token = credentials.credentials
+async def get_current_user(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Prefer cookie-based access token
+    token = request.cookies.get("access_token")
+    if not token and credentials:
+        token = credentials.credentials
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing credentials")
     try:
         payload = verify_token(token)
         user_id = payload.get("sub")
