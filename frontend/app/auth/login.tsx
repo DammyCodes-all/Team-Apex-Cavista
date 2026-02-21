@@ -1,6 +1,6 @@
 import { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   SafeAreaView,
   ScrollView,
@@ -12,9 +12,11 @@ import {
 
 import { PasswordInput } from "@/components/password-input";
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginScreen() {
   const colors = preventionTheme.colors.light;
+  const { signIn, isLoading, error: authError, clearError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -38,8 +40,19 @@ export default function LoginScreen() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleLogin = () => {
-    validateForm();
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    const didSignIn = await signIn({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (didSignIn) {
+      router.replace("/");
+    }
   };
 
   return (
@@ -102,6 +115,9 @@ export default function LoginScreen() {
                   value={email}
                   onChangeText={(value) => {
                     setEmail(value);
+                    if (authError) {
+                      clearError();
+                    }
                     if (errors.email) {
                       setErrors((prev) => ({ ...prev, email: undefined }));
                     }
@@ -138,6 +154,9 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={(value) => {
                   setPassword(value);
+                  if (authError) {
+                    clearError();
+                  }
                   if (errors.password) {
                     setErrors((prev) => ({ ...prev, password: undefined }));
                   }
@@ -174,8 +193,10 @@ export default function LoginScreen() {
             <TouchableOpacity
               className="items-center justify-center rounded-button"
               onPress={handleLogin}
+              disabled={isLoading}
               style={{
                 backgroundColor: colors.primary,
+                opacity: isLoading ? 0.7 : 1,
                 height: 56,
               }}
             >
@@ -186,9 +207,21 @@ export default function LoginScreen() {
                   fontFamily: preventionTheme.typography.family.medium,
                 }}
               >
-                Log In
+                {isLoading ? "Logging In..." : "Log In"}
               </Text>
             </TouchableOpacity>
+            {authError ? (
+              <Text
+                className="mt-xs"
+                style={{
+                  color: colors.error,
+                  fontSize: 12,
+                  fontFamily: preventionTheme.typography.family.body,
+                }}
+              >
+                {authError}
+              </Text>
+            ) : null}
           </View>
 
           <View className="mt-l items-center">

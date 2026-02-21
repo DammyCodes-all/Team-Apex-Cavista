@@ -1,6 +1,6 @@
 import { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   SafeAreaView,
   ScrollView,
@@ -12,9 +12,11 @@ import {
 
 import { PasswordInput } from "@/components/password-input";
 import { preventionTheme } from "@/constants/tokens";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function SignupScreen() {
   const colors = preventionTheme.colors.light;
+  const { signUp, isLoading, error: authError, clearError } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,8 +50,20 @@ export default function SignupScreen() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSignup = () => {
-    validateForm();
+  const handleSignup = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    const didSignUp = await signUp({
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (didSignUp) {
+      router.replace("/");
+    }
   };
 
   return (
@@ -115,6 +129,9 @@ export default function SignupScreen() {
                   value={fullName}
                   onChangeText={(value) => {
                     setFullName(value);
+                    if (authError) {
+                      clearError();
+                    }
                     if (errors.fullName) {
                       setErrors((prev) => ({ ...prev, fullName: undefined }));
                     }
@@ -160,6 +177,9 @@ export default function SignupScreen() {
                   value={email}
                   onChangeText={(value) => {
                     setEmail(value);
+                    if (authError) {
+                      clearError();
+                    }
                     if (errors.email) {
                       setErrors((prev) => ({ ...prev, email: undefined }));
                     }
@@ -196,6 +216,9 @@ export default function SignupScreen() {
                 value={password}
                 onChangeText={(value) => {
                   setPassword(value);
+                  if (authError) {
+                    clearError();
+                  }
                   if (errors.password) {
                     setErrors((prev) => ({ ...prev, password: undefined }));
                   }
@@ -220,8 +243,10 @@ export default function SignupScreen() {
             <TouchableOpacity
               className="items-center justify-center rounded-button"
               onPress={handleSignup}
+              disabled={isLoading}
               style={{
                 backgroundColor: colors.primary,
+                opacity: isLoading ? 0.7 : 1,
                 height: 56,
               }}
             >
@@ -232,9 +257,21 @@ export default function SignupScreen() {
                   fontFamily: preventionTheme.typography.family.medium,
                 }}
               >
-                Sign Up
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Text>
             </TouchableOpacity>
+            {authError ? (
+              <Text
+                className="mt-xs"
+                style={{
+                  color: colors.error,
+                  fontSize: 12,
+                  fontFamily: preventionTheme.typography.family.body,
+                }}
+              >
+                {authError}
+              </Text>
+            ) : null}
           </View>
 
           <View className="mt-l items-center">
