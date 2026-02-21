@@ -57,13 +57,13 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#CDE7E0", height: "100%" }}
+      style={{ flex: 1, backgroundColor: "#EEF1F7", height: "100%" }}
     >
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingHorizontal: 20,
-          paddingTop: 24,
+          paddingHorizontal: 24,
+          paddingTop: 40,
           paddingBottom: 24,
           justifyContent: "center",
           alignItems: "center",
@@ -71,11 +71,11 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ width: "100%", maxWidth: 420 }}>
-          <View className="items-center">
+          <View className="items-center" style={{ marginBottom: 22 }}>
             <Text
               className="text-center"
               style={{
-                color: "#2D3449",
+                color: "#0E1633",
                 fontSize: 28,
                 fontFamily: preventionTheme.typography.family.bold,
               }}
@@ -85,30 +85,55 @@ export default function LoginScreen() {
             <Text
               className="mt-xs text-center"
               style={{
-                color: "#5B6B7A",
-                fontSize: 16,
+                color: "#617188",
+                fontSize: 14,
                 fontFamily: preventionTheme.typography.family.body,
+                lineHeight: 22,
               }}
             >
-              Log in to your health dashboard
+              Your health data, secured by AI.
             </Text>
           </View>
 
-          <View className="mt-xl gap-m">
+          <View
+            style={{
+              backgroundColor: "#F6F7FB",
+              borderRadius: 22,
+              paddingHorizontal: 20,
+              paddingTop: 22,
+              paddingBottom: 20,
+              shadowColor: "#6A84A3",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.1,
+              shadowRadius: 14,
+              elevation: 1,
+            }}
+          >
             <View>
+              <Text
+                style={{
+                  color: "#223555",
+                  fontSize: 15,
+                  marginBottom: 8,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
+              >
+                Email
+              </Text>
               <View
                 className="flex-row items-center rounded-input px-m"
                 style={{
-                  backgroundColor: colors.card,
-                  borderColor: colors.inputBorder,
+                  backgroundColor: "#F4F6F9",
+                  borderColor: "#E3E8EF",
                   borderWidth: 1,
-                  height: 54,
+                  height: 56,
+                  borderRadius: 16,
                 }}
               >
-                <MaterialIcons name="mail-outline" size={20} color="#8A9AAF" />
+                <MaterialIcons name="mail" size={20} color="#8A9AAF" />
                 <TextInput
-                  placeholder="Email address"
-                  placeholderTextColor={colors.inputPlaceholder}
+                  placeholder="user@example.com"
+                  placeholderTextColor="#8EA0B6"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   className="ml-s flex-1"
@@ -123,7 +148,7 @@ export default function LoginScreen() {
                     }
                   }}
                   style={{
-                    color: colors.textPrimary,
+                    color: "#344966",
                     fontSize: 16,
                     fontFamily: preventionTheme.typography.family.body,
                   }}
@@ -134,7 +159,7 @@ export default function LoginScreen() {
                   className="mt-xs"
                   style={{
                     color: colors.error,
-                    fontSize: 12,
+                    fontSize: 13,
                     fontFamily: preventionTheme.typography.family.body,
                   }}
                 >
@@ -144,13 +169,24 @@ export default function LoginScreen() {
             </View>
 
             <View>
+              <Text
+                style={{
+                  color: "#223555",
+                  fontSize: 15,
+                  marginBottom: 8,
+                  marginTop: 14,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
+              >
+                Password
+              </Text>
               <PasswordInput
-                placeholder="Password"
-                placeholderTextColor={colors.inputPlaceholder}
-                textColor={colors.textPrimary}
+                placeholder="••••••••"
+                placeholderTextColor="#8EA0B6"
+                textColor="#344966"
                 fontFamily={preventionTheme.typography.family.body}
-                backgroundColor={colors.card}
-                borderColor={colors.inputBorder}
+                backgroundColor="#F4F6F9"
+                borderColor="#E3E8EF"
                 value={password}
                 onChangeText={(value) => {
                   setPassword(value);
@@ -167,7 +203,7 @@ export default function LoginScreen() {
                   className="mt-xs"
                   style={{
                     color: colors.error,
-                    fontSize: 12,
+                    fontSize: 13,
                     fontFamily: preventionTheme.typography.family.body,
                   }}
                 >
@@ -176,10 +212,10 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            <TouchableOpacity className="self-end">
+            <TouchableOpacity className="self-end" style={{ marginTop: 10 }}>
               <Text
                 style={{
-                  color: "#2F80ED",
+                  color: "#8A9AAF",
                   fontSize: 14,
                   fontFamily: preventionTheme.typography.family.medium,
                 }}
@@ -187,74 +223,84 @@ export default function LoginScreen() {
                 Forgot password?
               </Text>
             </TouchableOpacity>
-          </View>
 
-          <View className="mt-xl">
             <TouchableOpacity
-              className="items-center justify-center rounded-button"
+              className="items-center justify-center"
               onPress={handleLogin}
               disabled={isLoading}
               style={{
-                backgroundColor: colors.primary,
+                backgroundColor: "#63B5DB",
                 opacity: isLoading ? 0.7 : 1,
-                height: 56,
+                height: 48,
+                borderRadius: 16,
+                marginTop: 24,
+                shadowColor: "#63B5DB",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.18,
+                shadowRadius: 10,
+                elevation: 2,
               }}
             >
               <Text
                 style={{
                   color: "#FFFFFF",
-                  fontSize: 18,
+                  fontSize: 20,
                   fontFamily: preventionTheme.typography.family.medium,
+                  lineHeight: 26,
                 }}
               >
-                {isLoading ? "Logging In..." : "Log In"}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Text>
             </TouchableOpacity>
             {authError ? (
               <Text
-                className="mt-xs"
+                className="mt-xs text-center"
                 style={{
                   color: colors.error,
-                  fontSize: 12,
+                  fontSize: 13,
                   fontFamily: preventionTheme.typography.family.body,
                 }}
               >
                 {authError}
               </Text>
             ) : null}
+
+            <View
+              className="items-center justify-center"
+              style={{ marginTop: 20, flexDirection: "row", gap: 8 }}
+            >
+              <MaterialIcons name="verified-user" size={18} color="#B6A6D9" />
+              <Text
+                style={{
+                  color: "#8A9AAF",
+                  fontSize: 14,
+                  fontFamily: preventionTheme.typography.family.body,
+                }}
+              >
+                We never sell your data
+              </Text>
+            </View>
           </View>
 
-          <View className="mt-l items-center">
+          <View className="mt-xl items-center" style={{ marginTop: 26 }}>
             <Text
               style={{
-                color: "#5B6B7A",
-                fontSize: 14,
+                color: "#617188",
+                fontSize: 16,
                 fontFamily: preventionTheme.typography.family.body,
               }}
             >
-              Don&apos;t have an account?{" "}
+              New here?{" "}
               <Link href="/auth/signup" asChild>
                 <Text
                   style={{
-                    color: "#2F80ED",
+                    color: "#63B5DB",
                     fontFamily: preventionTheme.typography.family.medium,
                   }}
                 >
-                  Sign up
+                  Create account
                 </Text>
               </Link>
-            </Text>
-          </View>
-
-          <View className="mt-xl items-center">
-            <Text
-              style={{
-                color: "#8896A6",
-                fontSize: 12,
-                fontFamily: preventionTheme.typography.family.body,
-              }}
-            >
-              Secure login — your health data is safe and private
             </Text>
           </View>
         </View>

@@ -5,7 +5,6 @@ import axios, {
   isAxiosError,
 } from "axios";
 
-import { getCsrfToken } from "@/lib/api/csrf";
 import {
   API_BASE_URL,
   API_CSRF_HEADER_NAME,
@@ -58,13 +57,26 @@ let refreshPromise: Promise<void> | null = null;
 
 // Response interceptor: auto-refresh on 401/403 (token expiry)
 apiClient.interceptors.response.use(
-  (response) => response,
+  async (response) => {
+    await syncCsrfTokenFromSetCookieHeader(response.headers?.["set-cookie"]);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+    await syncCsrfTokenFromSetCookieHeader(
+      error.response?.headers?.["set-cookie"],
+    );
+
+    const status = error.response?.status;
+    const responseMessage = String(
+      error.response?.data?.message ?? error.response?.data?.error ?? "",
+    ).toLowerCase();
+    const isCsrfFailure = status === 403 && responseMessage.includes("csrf");
 
     // Skip refresh logic for refresh endpoint itself and other non-401/403 errors
     if (
-      (error.response?.status !== 401 && error.response?.status !== 403) ||
+      (status !== 401 && status !== 403) ||
+      isCsrfFailure ||
       originalRequest.url === "/auth/refresh"
     ) {
       return Promise.reject(error);

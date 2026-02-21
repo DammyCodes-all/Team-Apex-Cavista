@@ -205,10 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        await post<string, LoginPayload>(
-          "/auth/login",
-          payload,
-        );
+        await post<string, LoginPayload>("/auth/login", payload);
         const nextSession = buildSession(payload.email);
         setSession(nextSession);
         await Promise.all([persistSession(nextSession), persistAuthHistory()]);
@@ -230,14 +227,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        await post<
-          string,
-          { email: string; password: string; name: string }
-        >("/auth/signup", {
-          email: payload.email,
-          password: payload.password,
-          name: payload.name,
-        });
+        await post<string, { email: string; password: string; name: string }>(
+          "/auth/signup",
+          {
+            email: payload.email,
+            password: payload.password,
+            name: payload.name,
+          },
+        );
 
         const nextSession = buildSession(payload.email, payload.name);
         setSession(nextSession);
@@ -264,7 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always clear local session even if logout request fails.
     } finally {
       setSession(null);
-      await persistSession(null);
+      await Promise.all([persistSession(null)]);
       setIsLoading(false);
     }
   }, [persistSession]);

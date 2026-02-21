@@ -32,10 +32,11 @@ export function PasswordInput({
         backgroundColor,
         borderColor,
         borderWidth: 1,
-        height: 54,
+        height: 56,
+        borderRadius: 16,
       }}
     >
-      <MaterialIcons name="lock-outline" size={20} color="#8A9AAF" />
+      <MaterialIcons name="lock-outline" size={18} color="#8A9AAF" />
       <TextInput
         placeholder={placeholder}
         placeholderTextColor={placeholderTextColor}
@@ -45,14 +46,14 @@ export function PasswordInput({
         onChangeText={onChangeText}
         style={{
           color: textColor,
-          fontSize: 16,
+          fontSize: 15,
           fontFamily,
         }}
       />
       <TouchableOpacity onPress={() => setVisible((prev) => !prev)}>
         <MaterialIcons
           name={visible ? "visibility-off" : "visibility"}
-          size={20}
+          size={18}
           color="#8A9AAF"
         />
       </TouchableOpacity>
