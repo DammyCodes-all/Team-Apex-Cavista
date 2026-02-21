@@ -10,8 +10,7 @@ const items = [
 
 const PrivacySection = () => (
   <section id="privacy" className="py-32 relative">
-    <div className="absolute inset-0 gradient-radial pointer-events-none" />
-    <div className="container mx-auto px-6 relative z-10">
+    <div className="container mx-auto px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

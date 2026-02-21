@@ -29,8 +29,7 @@ const item = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transiti
 
 const HowItWorks = () => (
   <section id="how-it-works" className="py-32 relative">
-    <div className="absolute inset-0 gradient-radial pointer-events-none" />
-    <div className="container mx-auto px-6 relative z-10">
+    <div className="container mx-auto px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -52,7 +51,7 @@ const HowItWorks = () => (
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {steps.map((s, i) => (
-          <motion.div key={i} variants={item} className="glass p-8 text-center group hover:glow-teal-sm transition-shadow duration-500">
+          <motion.div key={i} variants={item} className="glass p-8 text-center group hover:shadow-md transition-shadow duration-500">
             <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
               <s.icon className="w-7 h-7 text-primary" />
             </div>
