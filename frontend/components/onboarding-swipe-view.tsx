@@ -31,9 +31,11 @@ export function OnboardingSwipeView({
         },
         onPanResponderRelease: (_, gestureState) => {
           const isSwipeLeft =
-            gestureState.dx <= -SWIPE_DISTANCE || gestureState.vx <= -SWIPE_VELOCITY;
+            gestureState.dx <= -SWIPE_DISTANCE ||
+            gestureState.vx <= -SWIPE_VELOCITY;
           const isSwipeRight =
-            gestureState.dx >= SWIPE_DISTANCE || gestureState.vx >= SWIPE_VELOCITY;
+            gestureState.dx >= SWIPE_DISTANCE ||
+            gestureState.vx >= SWIPE_VELOCITY;
 
           if (isSwipeLeft && step < totalSteps) {
             router.push(`/onboarding/step-${step + 1}` as Href);
@@ -41,7 +43,12 @@ export function OnboardingSwipeView({
           }
 
           if (isSwipeRight && step > 1) {
-            router.push(`/onboarding/step-${step - 1}` as Href);
+            if (router.canGoBack()) {
+              router.back();
+              return;
+            }
+
+            router.replace(`/onboarding/step-${step - 1}` as Href);
           }
         },
       }),

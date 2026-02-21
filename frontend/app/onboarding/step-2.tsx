@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
+import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
 
 type PermissionKey =
@@ -82,170 +83,173 @@ export default function OnboardingStepTwo() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
-      <View
-        className="flex-1 px-4"
-        style={{
-          paddingTop: 20,
-          paddingBottom: 20,
-          backgroundColor: "#C9DCE8",
-        }}
-      >
-        <View className="items-center pt-l">
-          <OnboardingStepDots
-            step={2}
-            totalSteps={5}
-            labelColor="#5C6875"
-            labelFontSize={32 / 2}
-            labelFontFamily={preventionTheme.typography.family.medium}
-            activeColor={colors.primary}
-            inactiveColor="#90A5B5"
-            activeSize={16}
-            inactiveSize={8}
-            gap={10}
-          />
-        </View>
+      <OnboardingSwipeView step={2} totalSteps={5}>
+        <View
+          className="flex-1 px-4"
+          style={{
+            paddingTop: 20,
+            paddingBottom: 20,
+            backgroundColor: "#C9DCE8",
+          }}
+        >
+          <View className="items-center pt-l">
+            <OnboardingStepDots
+              step={2}
+              totalSteps={5}
+              labelColor="#5C6875"
+              labelFontSize={32 / 2}
+              labelFontFamily={preventionTheme.typography.family.medium}
+              activeColor={colors.primary}
+              inactiveColor="#90A5B5"
+              activeSize={16}
+              inactiveSize={8}
+              gap={10}
+            />
+          </View>
 
-        <View className="mt-l px-1">
-          <Text
-            style={{
-              color: "#2D3449",
-              fontSize: 44 / 2,
-              lineHeight: 52 / 2,
-              fontFamily: preventionTheme.typography.family.bold,
-            }}
-          >
-            Your AI Needs Permission to{"\n"}Monitor Trends
-          </Text>
+          <View className="mt-l px-1">
+            <Text
+              style={{
+                color: "#2D3449",
+                fontSize: 44 / 2,
+                lineHeight: 52 / 2,
+                fontFamily: preventionTheme.typography.family.bold,
+              }}
+            >
+              Your AI Needs Permission to{"\n"}Monitor Trends
+            </Text>
 
-          <Text
-            className="mt-m"
-            style={{
-              color: "#45566A",
-              fontSize: 16,
-              lineHeight: 26,
-              fontFamily: preventionTheme.typography.family.body,
-            }}
-          >
-            We track your steps, sleep, screen time, location, and optional
-            voice stress to provide personalized prevention tips.
-          </Text>
-        </View>
+            <Text
+              className="mt-m"
+              style={{
+                color: "#45566A",
+                fontSize: 16,
+                lineHeight: 26,
+                fontFamily: preventionTheme.typography.family.body,
+              }}
+            >
+              We track your steps, sleep, screen time, location, and optional
+              voice stress to provide personalized prevention tips.
+            </Text>
+          </View>
 
-        <View className="mt-l" style={{ gap: 12 }}>
-          {PERMISSIONS.map((permission) => {
-            const isEnabled = permissions[permission.key];
+          <View className="mt-l" style={{ gap: 12 }}>
+            {PERMISSIONS.map((permission) => {
+              const isEnabled = permissions[permission.key];
 
-            return (
-              <View
-                key={permission.key}
-                className="flex-row items-center rounded-2xl"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderWidth: 1,
-                  borderColor: "#D8E4EC",
-                  paddingHorizontal: 14,
-                  paddingVertical: 13,
-                }}
-              >
-                <Text style={{ fontSize: 30, marginRight: 12 }}>
-                  {permission.icon}
-                </Text>
+              return (
+                <View
+                  key={permission.key}
+                  className="flex-row items-center rounded-2xl"
+                  style={{
+                    backgroundColor: "#FFFFFF",
+                    borderWidth: 1,
+                    borderColor: "#D8E4EC",
+                    paddingHorizontal: 14,
+                    paddingVertical: 13,
+                  }}
+                >
+                  <Text style={{ fontSize: 30, marginRight: 12 }}>
+                    {permission.icon}
+                  </Text>
 
-                <View style={{ flex: 1 }}>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <Text
-                      style={{
-                        color: "#2D3449",
-                        fontSize: 30 / 2,
-                        lineHeight: 36 / 2,
-                        fontFamily: preventionTheme.typography.family.semiBold,
-                        flexShrink: 1,
-                      }}
-                    >
-                      {permission.title}
-                    </Text>
-
-                    {permission.optional ? (
-                      <View
-                        className="rounded-md"
+                  <View style={{ flex: 1 }}>
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Text
                         style={{
-                          backgroundColor: "#FDECC8",
-                          paddingHorizontal: 8,
-                          paddingVertical: 2,
+                          color: "#2D3449",
+                          fontSize: 30 / 2,
+                          lineHeight: 36 / 2,
+                          fontFamily:
+                            preventionTheme.typography.family.semiBold,
+                          flexShrink: 1,
                         }}
                       >
-                        <Text
+                        {permission.title}
+                      </Text>
+
+                      {permission.optional ? (
+                        <View
+                          className="rounded-md"
                           style={{
-                            color: "#DD8B00",
-                            fontSize: 11,
-                            fontFamily:
-                              preventionTheme.typography.family.medium,
+                            backgroundColor: "#FDECC8",
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
                           }}
                         >
-                          OPTIONAL
-                        </Text>
-                      </View>
-                    ) : null}
+                          <Text
+                            style={{
+                              color: "#DD8B00",
+                              fontSize: 11,
+                              fontFamily:
+                                preventionTheme.typography.family.medium,
+                            }}
+                          >
+                            OPTIONAL
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    <Text
+                      style={{
+                        color: "#60718A",
+                        fontSize: 24 / 2,
+                        lineHeight: 30 / 2,
+                        fontFamily: preventionTheme.typography.family.body,
+                        marginTop: 4,
+                      }}
+                    >
+                      {permission.subtitle}
+                    </Text>
                   </View>
 
-                  <Text
-                    style={{
-                      color: "#60718A",
-                      fontSize: 24 / 2,
-                      lineHeight: 30 / 2,
-                      fontFamily: preventionTheme.typography.family.body,
-                      marginTop: 4,
-                    }}
-                  >
-                    {permission.subtitle}
-                  </Text>
+                  <Switch
+                    value={isEnabled}
+                    onValueChange={(value) =>
+                      togglePermission(permission.key, value)
+                    }
+                    trackColor={{ false: "#D3DCE6", true: colors.primary }}
+                    thumbColor="#FFFFFF"
+                    ios_backgroundColor="#D3DCE6"
+                  />
                 </View>
+              );
+            })}
+          </View>
 
-                <Switch
-                  value={isEnabled}
-                  onValueChange={(value) =>
-                    togglePermission(permission.key, value)
-                  }
-                  trackColor={{ false: "#D3DCE6", true: colors.primary }}
-                  thumbColor="#FFFFFF"
-                  ios_backgroundColor="#D3DCE6"
-                />
-              </View>
-            );
-          })}
-        </View>
-
-        <View className="mt-auto pt-l">
-          <Text
-            className="text-center"
-            style={{
-              color: "#56687F",
-              fontSize: 28 / 2,
-              fontFamily: preventionTheme.typography.family.medium,
-              marginBottom: 14,
-            }}
-          >
-            {enabledCount} of 5 enabled
-          </Text>
-
-          <Link href="/onboarding/step-3" asChild>
-            <TouchableOpacity
-              className="h-14 items-center justify-center rounded-button"
-              style={{ backgroundColor: colors.primary }}
+          <View className="mt-auto pt-l">
+            <Text
+              className="text-center"
+              style={{
+                color: "#56687F",
+                fontSize: 28 / 2,
+                fontFamily: preventionTheme.typography.family.medium,
+                marginBottom: 14,
+              }}
             >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 18,
-                  fontFamily: preventionTheme.typography.family.medium,
-                }}
+              {enabledCount} of 5 enabled
+            </Text>
+
+            <Link href="/onboarding/step-3" asChild>
+              <TouchableOpacity
+                className="h-14 items-center justify-center rounded-button"
+                style={{ backgroundColor: colors.primary }}
               >
-                Allow & Continue
-              </Text>
-            </TouchableOpacity>
-          </Link>
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontSize: 18,
+                    fontFamily: preventionTheme.typography.family.medium,
+                  }}
+                >
+                  Allow & Continue
+                </Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
         </View>
-      </View>
+      </OnboardingSwipeView>
     </SafeAreaView>
   );
 }
