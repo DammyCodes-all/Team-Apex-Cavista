@@ -7,6 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Path } from "react-native-svg";
 import { preventionTheme } from "@/constants/tokens";
@@ -787,6 +788,7 @@ function WeeklyGoals({ goals }: { goals: GoalItem[] }) {
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function HomeScreen() {
   const data = useDashboardData();
+  const router = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -808,6 +810,7 @@ export default function HomeScreen() {
       {/* AI Chat FAB */}
       <TouchableOpacity
         activeOpacity={0.85}
+        onPress={() => router.push("/(tabs)/aiPage")}
         style={{
           position: "absolute",
           bottom: 90,

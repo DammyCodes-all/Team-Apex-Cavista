@@ -169,6 +169,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="aiPage"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="pedometer-test"
         options={{
           href: null,
