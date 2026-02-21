@@ -174,11 +174,9 @@ function useDashboardData(): DashboardData {
 }
 
 // ─── Header ─────────────────────────────────────────────────────────
-function Header({ userName }: { userName: string }) {
+function Header() {
   const dateStr = useMemo(() => getFormattedDate(), []);
   const greeting = useMemo(() => getGreeting(), []);
-
-function Header() {
   const { user } = useAuth();
   const displayName = user?.fullName || "User";
   const initials =
@@ -198,7 +196,7 @@ function Header() {
       }}
     >
       {/* Left: date + greeting */}
-      <View>
+      <View style={{ flex: 1, marginRight: 12 }}>
         <Text
           style={{
             fontFamily: typo.family.body,
@@ -210,13 +208,15 @@ function Header() {
           {dateStr}
         </Text>
         <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={{
             fontFamily: typo.family.bold,
             fontSize: typo.size.headline,
             color: colors.textPrimary,
           }}
         >
-          Good Morning, {user?.fullName || "User"}!
+          {greeting}, {displayName}!
         </Text>
       </View>
 
@@ -813,7 +813,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <Header userName={data.userName ?? "User"} />
+        <Header />
         <DailyInsightCard insight={data.insight} />
         <MetricsGrid
           steps={data.steps}
