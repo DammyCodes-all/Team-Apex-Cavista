@@ -6,6 +6,7 @@ from app.utils.security import verify_password, get_password_hash
 from app.utils.jwt import create_access_token
 from app.utils.tokens import generate_refresh_token, hash_token
 from app.config import settings as cfg
+from app.services.health_profile_service import create_health_profile
 
 
 async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any]:
@@ -16,6 +17,10 @@ async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any
     user = {"email": email, "password": hashed, "name": name, "created_at": datetime.utcnow()}
     result = await db.users.insert_one(user)
     user_id = str(result.inserted_id)
+    
+    # Auto-create health profile for baseline learning
+    await create_health_profile(db, user_id)
+    
     access = create_access_token({"sub": user_id})
     refresh = generate_refresh_token()
     hashed_refresh = hash_token(refresh)
