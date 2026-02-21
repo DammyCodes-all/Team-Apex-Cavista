@@ -79,7 +79,6 @@ export default function OnboardingStepFour() {
       setShowCustomGoalModal(true);
       return;
     }
-
     setSelectedGoals((prev) =>
       prev.includes(goalId)
         ? prev.filter((id) => id !== goalId)
@@ -87,11 +86,11 @@ export default function OnboardingStepFour() {
     );
   };
 
-  const handleSaveCustomGoal = () => {
+  const saveCustomGoal = () => {
     if (customGoalText.trim()) {
-      if (!selectedGoals.includes("custom")) {
-        setSelectedGoals((prev) => [...prev, "custom"]);
-      }
+      setSelectedGoals((prev) =>
+        prev.includes("custom") ? prev : [...prev, "custom"],
+      );
       setShowCustomGoalModal(false);
     }
   };
@@ -234,7 +233,9 @@ export default function OnboardingStepFour() {
                         fontFamily: preventionTheme.typography.family.semiBold,
                       }}
                     >
-                      {goal.title}
+                      {goal.id === "custom" && customGoalText
+                        ? customGoalText
+                        : goal.title}
                     </Text>
                     <Text
                       style={{
@@ -244,7 +245,9 @@ export default function OnboardingStepFour() {
                         marginTop: 6,
                       }}
                     >
-                      {goal.subtitle}
+                      {goal.id === "custom" && customGoalText
+                        ? "Your custom priority"
+                        : goal.subtitle}
                     </Text>
 
                     {isSelected && (
@@ -293,7 +296,9 @@ export default function OnboardingStepFour() {
                         fontFamily: preventionTheme.typography.family.semiBold,
                       }}
                     >
-                      {goal.title}
+                      {goal.id === "custom" && customGoalText
+                        ? customGoalText
+                        : goal.title}
                     </Text>
                     <Text
                       style={{
@@ -303,7 +308,9 @@ export default function OnboardingStepFour() {
                         marginTop: 6,
                       }}
                     >
-                      {goal.subtitle}
+                      {goal.id === "custom" && customGoalText
+                        ? "Your custom priority"
+                        : goal.subtitle}
                     </Text>
 
                     {isSelected && (
@@ -361,137 +368,145 @@ export default function OnboardingStepFour() {
             </Link>
           </View>
         </ScrollView>
+      </OnboardingSwipeView>
 
-        <Modal
-          visible={showCustomGoalModal}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setShowCustomGoalModal(false)}
-        >
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <TouchableOpacity
-              style={{ flex: 1 }}
-              onPress={() => setShowCustomGoalModal(false)}
-              activeOpacity={1}
-            />
+      <Modal
+        visible={showCustomGoalModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCustomGoalModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => setShowCustomGoalModal(false)}
+            activeOpacity={1}
+          />
 
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingTop: 20,
+              paddingHorizontal: 20,
+              paddingBottom: 32,
+            }}
+          >
             <View
-              style={{
-                backgroundColor: "#FFFFFF",
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                paddingTop: 20,
-                paddingHorizontal: 20,
-                paddingBottom: 32,
-              }}
+              className="flex-row items-center justify-between"
+              style={{ marginBottom: 16 }}
             >
-              <View
-                className="flex-row items-center justify-between"
-                style={{ marginBottom: 20 }}
-              >
-                <Text
-                  style={{
-                    color: "#2D3449",
-                    fontSize: 18,
-                    fontFamily: preventionTheme.typography.family.bold,
-                  }}
-                >
-                  Custom Goal
-                </Text>
-
-                <TouchableOpacity
-                  onPress={() => setShowCustomGoalModal(false)}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons
-                    name="close"
-                    size={24}
-                    color="#90A2B7"
-                  />
-                </TouchableOpacity>
-              </View>
-
               <Text
                 style={{
-                  color: "#4E6177",
-                  fontSize: 14,
-                  fontFamily: preventionTheme.typography.family.body,
-                  marginBottom: 16,
+                  color: "#2D3449",
+                  fontSize: 18,
+                  fontFamily: preventionTheme.typography.family.bold,
                 }}
               >
-                Tell us your specific health or wellness priority
+                Custom Goal
               </Text>
 
-              <View
-                className="flex-row items-center rounded-2xl"
+              <TouchableOpacity
+                onPress={() => setShowCustomGoalModal(false)}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="close" size={24} color="#90A2B7" />
+              </TouchableOpacity>
+            </View>
+
+            <Text
+              style={{
+                color: "#4E6177",
+                fontSize: 14,
+                fontFamily: preventionTheme.typography.family.body,
+                marginBottom: 12,
+              }}
+            >
+              Tell us what matters most to you for your health journey
+            </Text>
+
+            <View
+              className="flex-row items-start rounded-2xl"
+              style={{
+                backgroundColor: "#F5F8FB",
+                borderWidth: 1,
+                borderColor: "#D3DEE8",
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                minHeight: 100,
+              }}
+            >
+              <TextInput
+                placeholder="Enter your custom goal"
+                placeholderTextColor="#8A9CB1"
+                multiline
+                maxLength={150}
+                value={customGoalText}
+                onChangeText={setCustomGoalText}
                 style={{
-                  backgroundColor: "#F5F8FB",
-                  borderWidth: 1,
-                  borderColor: "#D3DEE8",
-                  paddingHorizontal: 14,
-                  minHeight: 120,
-                  marginBottom: 16,
+                  flex: 1,
+                  color: "#2D3449",
+                  fontSize: 16,
+                  fontFamily: preventionTheme.typography.family.body,
+                }}
+              />
+            </View>
+
+            <Text
+              style={{
+                color: "#8A9CB1",
+                fontSize: 12,
+                fontFamily: preventionTheme.typography.family.body,
+                marginTop: 8,
+                textAlign: "right",
+              }}
+            >
+              {customGoalText.length}/150
+            </Text>
+
+            <TouchableOpacity
+              onPress={saveCustomGoal}
+              activeOpacity={0.85}
+              className="h-12 items-center justify-center rounded-2xl mt-4"
+              style={{
+                backgroundColor: colors.primary,
+                opacity: customGoalText.trim() ? 1 : 0.5,
+              }}
+              disabled={!customGoalText.trim()}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  fontFamily: preventionTheme.typography.family.medium,
                 }}
               >
-                <TextInput
-                  placeholder="Write your custom goal..."
-                  placeholderTextColor="#8A9CB1"
-                  multiline
-                  value={customGoalText}
-                  onChangeText={setCustomGoalText}
-                  style={{
-                    flex: 1,
-                    color: "#2D3449",
-                    fontSize: 16,
-                    fontFamily: preventionTheme.typography.family.body,
-                    paddingVertical: 12,
-                  }}
-                />
-              </View>
+                Save Goal
+              </Text>
+            </TouchableOpacity>
 
-              <View style={{ gap: 12 }}>
-                <TouchableOpacity
-                  onPress={handleSaveCustomGoal}
-                  activeOpacity={0.85}
-                  className="h-12 items-center justify-center rounded-2xl"
-                  style={{
-                    backgroundColor: colors.primary,
-                    opacity: customGoalText.trim() ? 1 : 0.5,
-                  }}
-                  disabled={!customGoalText.trim()}
-                >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 16,
-                      fontFamily: preventionTheme.typography.family.medium,
-                    }}
-                  >
-                    Save Goal
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setShowCustomGoalModal(false)}
-                  activeOpacity={0.85}
-                  className="h-12 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: "#DCE8EF" }}
-                >
-                  <Text
-                    style={{
-                      color: "#2F80ED",
-                      fontSize: 16,
-                      fontFamily: preventionTheme.typography.family.medium,
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <TouchableOpacity
+              onPress={() => setShowCustomGoalModal(false)}
+              activeOpacity={0.85}
+              className="h-12 items-center justify-center rounded-2xl mt-2"
+              style={{
+                backgroundColor: "#DCE8EF",
+              }}
+            >
+              <Text
+                style={{
+                  color: "#2F80ED",
+                  fontSize: 16,
+                  fontFamily: preventionTheme.typography.family.medium,
+                }}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </OnboardingSwipeView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
