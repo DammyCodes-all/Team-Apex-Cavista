@@ -44,7 +44,7 @@ async def ai_baseline_status(
             "message": "Baseline learning complete. AI insights are now active."
         }
     """
-    user_id = str(current_user.get("_id"))
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
     status_info = await get_baseline_status(db, user_id)
     

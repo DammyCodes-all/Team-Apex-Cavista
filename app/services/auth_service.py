@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any
 import secrets
+import uuid
 from datetime import datetime, timedelta
 from bson import ObjectId
 from app.utils.security import verify_password, get_password_hash
@@ -15,8 +16,11 @@ async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any
         raise ValueError("Email already registered")
     hashed = get_password_hash(password)
     user = {"email": email, "password": hashed, "name": name, "created_at": datetime.utcnow()}
+    # generate unique uuid for new user_id (used across collections)
+    user_id = str(uuid.uuid4())
+    user["user_id"] = user_id
     result = await db.users.insert_one(user)
-    user_id = str(result.inserted_id)
+    # still store Mongo _id but link documents with the uuid
     
     # Auto-create health profile for baseline learning
     await create_health_profile(db, user_id)
@@ -33,11 +37,12 @@ async def authenticate_user(db, email: str, password: str) -> Optional[Dict[str,
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(password, user["password"]):
         return None
-    user_id = str(user.get("_id"))
+    # prefer uuid if present
+    user_id = user.get("user_id") or str(user.get("_id"))
     access = create_access_token({"sub": user_id})
     refresh = generate_refresh_token()
     await db.refresh_tokens.insert_one({"user_id": user_id, "token_hash": hash_token(refresh), "created_at": datetime.utcnow(), "revoked": False, "device_id": None})
-    return {"access_token": access, "refresh_token": refresh}
+    return {"access_token": access, "refresh_token": refresh, "user_id": user_id}
 
 
 async def store_refresh_token(db, user_id: str, refresh: str, device_id: Optional[str] = None, expires_days: int = 30):

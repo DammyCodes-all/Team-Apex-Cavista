@@ -11,6 +11,7 @@ async def download_reports(format: str = "csv", include_insights: bool = True, c
     if format not in ("csv", "pdf"):
         return {"error": "unsupported format"}
     if format == "csv":
-        return await generate_csv(db, str(current_user.get("_id")), include_insights=include_insights)
+        user_id = current_user.get("user_id") or str(current_user.get("_id"))
+        return await generate_csv(db, user_id, include_insights=include_insights)
     # TODO: implement PDF export
     return {"message": "PDF export not implemented"}

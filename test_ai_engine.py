@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from typing import Dict, Any
 
 # Test configuration
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8888"
 import time
 TEST_EMAIL = f"aitest{int(time.time())}@example.com"
 TEST_PASSWORD = "TestPassword123!@#"

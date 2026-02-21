@@ -17,6 +17,7 @@ async def store_daily_metrics(
     sedentary_minutes: int,
     location_diversity_score: float,
     active_minutes: int,
+    screen_time_minutes: int | None = None,
 ) -> Dict[str, Any]:
     """
     Store daily metrics for a user.
@@ -38,21 +39,25 @@ async def store_daily_metrics(
     """
     now = datetime.utcnow()
     
+    # Convert date_ (datetime.date) to a timezone-naive datetime at midnight for MongoDB
+    date_dt = datetime(date_.year, date_.month, date_.day)
+
     metrics = {
         "user_id": user_id,
-        "date": date_,
+        "date": date_dt,
         "steps": steps,
         "sleep_duration_minutes": sleep_duration_minutes,
         "sedentary_minutes": sedentary_minutes,
         "location_diversity_score": location_diversity_score,
         "active_minutes": active_minutes,
+        "screen_time_minutes": screen_time_minutes,
         "created_at": now,
         "updated_at": now,
     }
     
     # Upsert: if record exists for this user+date, update it; else create
     result = await db.daily_metrics.find_one_and_update(
-        {"user_id": user_id, "date": date_},
+        {"user_id": user_id, "date": date_dt},
         {"$set": metrics},
         upsert=True,
         return_document=True
@@ -67,7 +72,8 @@ async def get_daily_metrics(
     date_: date
 ) -> Optional[Dict[str, Any]]:
     """Retrieve a user's metrics for a specific date."""
-    return await db.daily_metrics.find_one({"user_id": user_id, "date": date_})
+    date_dt = datetime(date_.year, date_.month, date_.day)
+    return await db.daily_metrics.find_one({"user_id": user_id, "date": date_dt})
 
 
 async def get_user_metrics_range(
@@ -88,9 +94,13 @@ async def get_user_metrics_range(
     Returns:
         List of metrics documents, sorted by date ascending
     """
+    # Convert date objects to datetimes for MongoDB queries
+    start_dt = datetime(start_date.year, start_date.month, start_date.day)
+    end_dt = datetime(end_date.year, end_date.month, end_date.day)
+
     cursor = db.daily_metrics.find({
         "user_id": user_id,
-        "date": {"$gte": start_date, "$lte": end_date}
+        "date": {"$gte": start_dt, "$lte": end_dt}
     }).sort("date", 1)
     
     return await cursor.to_list(length=None)

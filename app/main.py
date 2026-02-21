@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 import logging
-from app.config.settings import settings
+from app.core.config import settings
 from app.routers import router
-from app.db.client import connect_to_mongo, close_mongo
+from app.core.database import connect_to_mongo, close_mongo
 from app.middleware.csrf import csrf_protect
 
 

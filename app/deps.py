@@ -22,12 +22,18 @@ async def get_current_user(request: Request, credentials: HTTPAuthorizationCrede
     db = get_database(request)
     # try to resolve ObjectId if possible
     user = None
-    try:
-        oid = ObjectId(user_id)
-        user = await db.users.find_one({"_id": oid})
-    except Exception:
-        # fall back to string key lookups
-        user = await db.users.find_one({"_id": user_id}) or await db.users.find_one({"email": user_id})
+    # first, try to look up by new UUID field
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        # fall back to legacy _id or email for compatibility
+        try:
+            oid = ObjectId(user_id)
+            user = await db.users.find_one({"_id": oid})
+        except Exception:
+            user = await db.users.find_one({"email": user_id})
+    if user:
+        # ensure user_id property is present on returned object
+        user["user_id"] = user_id
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user

@@ -8,7 +8,8 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 @router.get("")
 async def get_alerts(current_user=Depends(get_current_user), db=Depends(get_database)):
-    return await list_alerts(db, str(current_user.get("_id")))
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
+    return await list_alerts(db, user_id)
 
 
 @router.post("/{alert_id}/read")

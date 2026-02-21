@@ -6,14 +6,14 @@ Tracks the baseline collection phase.
 """
 from datetime import datetime
 from typing import Optional, Dict, Any
-from app.models.health_profile import EnabledSignals, GoalFocus, BaselineMetrics
+from app.models.health_profile import EnabledSignals, Goals, BaselineMetrics
 
 
 async def create_health_profile(
     db,
     user_id: str,
     enabled_signals: Optional[EnabledSignals] = None,
-    goal_focus: Optional[GoalFocus] = None
+    goals: Optional[Goals] = None
 ) -> Dict[str, Any]:
     """
     Create a new health profile for a user after signup.
@@ -25,7 +25,7 @@ async def create_health_profile(
         db: Motor AsyncIOMotorDatabase instance
         user_id: User ID from auth
         enabled_signals: Health signals to monitor
-        goal_focus: User health goals
+        goals: User health goals
     
     Returns:
         The created health_profile document
@@ -38,7 +38,7 @@ async def create_health_profile(
         "baseline_start_date": now,
         "baseline_days_collected": 0,
         "enabled_signals": (enabled_signals or EnabledSignals()).model_dump(),
-        "goal_focus": (goal_focus or GoalFocus()).model_dump(),
+        "goals": (goals or Goals()).model_dump(),
         "baseline_metrics": BaselineMetrics().model_dump(),
         "risk_score": 0.0,
         "created_at": now,

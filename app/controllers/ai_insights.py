@@ -74,7 +74,7 @@ async def ai_insights(
             }
         ]
     """
-    user_id = str(current_user.get("_id"))
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
     # Verify user has health profile
     profile = await get_health_profile(db, user_id)

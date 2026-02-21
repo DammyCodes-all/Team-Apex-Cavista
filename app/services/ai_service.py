@@ -53,8 +53,8 @@ async def activate_baseline_if_ready(db, user_id: str) -> bool:
     if days_collected < 14:
         return False
     
-    # Fetch last 14-21 days of metrics
-    end_date = date.today()
+    # Fetch last 14-21 days of metrics (use datetimes for MongoDB queries)
+    end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=20)
     
     cursor = db.daily_metrics.find({
@@ -450,7 +450,8 @@ async def generate_insights(
     # Create insight document
     insight_doc = {
         "user_id": user_id,
-        "date": date.today(),
+        # store full datetime for insight date
+        "date": datetime.utcnow(),
         "risk_score": risk_score,
         "risk_level": risk_level,
         "summary_message": summary_message,
@@ -475,8 +476,8 @@ async def generate_insights(
 
 async def get_latest_insights(db, user_id: str, days: int = 7) -> List[Dict[str, Any]]:
     """Retrieve latest AI insights for a user (last N days)."""
-    start_date = date.today() - timedelta(days=days)
-    
+    start_date = datetime.utcnow() - timedelta(days=days)
+
     cursor = db.ai_insights.find({
         "user_id": user_id,
         "date": {"$gte": start_date}

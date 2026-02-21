@@ -18,7 +18,7 @@ class EnabledSignals(BaseModel):
     voice_stress: bool = False
 
 
-class GoalFocus(BaseModel):
+class Goals(BaseModel):
     """User-selected health goals."""
     selected_goals: List[str] = []  # e.g., ["improve_sleep", "reduce_sedentary"]
     custom_goal: Optional[str] = None
@@ -37,7 +37,7 @@ class HealthProfileCreate(BaseModel):
     """Request schema for creating a health profile (typically auto-created on signup)."""
     user_id: str
     enabled_signals: Optional[EnabledSignals] = None
-    goal_focus: Optional[GoalFocus] = None
+    goals: Optional[Goals] = None
 
 
 class HealthProfileResponse(BaseModel):
@@ -47,7 +47,7 @@ class HealthProfileResponse(BaseModel):
     baseline_start_date: datetime
     baseline_days_collected: int
     enabled_signals: EnabledSignals
-    goal_focus: GoalFocus
+    goals: Goals
     baseline_metrics: BaselineMetrics
     risk_score: float
     created_at: datetime
@@ -60,4 +60,4 @@ class HealthProfileResponse(BaseModel):
 class HealthProfileUpdate(BaseModel):
     """Request schema for updating health profile settings."""
     enabled_signals: Optional[EnabledSignals] = None
-    goal_focus: Optional[GoalFocus] = None
+    goals: Optional[Goals] = None

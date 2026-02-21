@@ -6,7 +6,7 @@ This is part of the baseline collection phase for Prevention AI.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import date
-from app.models.daily_metrics import DailyMetricsCreate, DailyMetricsResponse
+from app.models.metrics_model import MetricsCreate, MetricsResponse
 from app.services.daily_metrics_service import store_daily_metrics, get_daily_metrics
 from app.services.health_profile_service import increment_baseline_days, get_health_profile
 from app.services.ai_service import (
@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health-data", tags=["health-data"])
 
 
-@router.post("", response_model=DailyMetricsResponse)
+@router.post("", response_model=MetricsResponse)
 async def store_daily_health_data(
-    payload: DailyMetricsCreate,
+    payload: MetricsCreate,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_database)
 ):
@@ -90,7 +90,7 @@ async def store_daily_health_data(
             "updated_at": "2026-02-21T10:30:00"
         }
     """
-    user_id = str(current_user.get("_id"))
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
     # Verify health profile exists
     profile = await get_health_profile(db, user_id)
@@ -147,7 +147,7 @@ async def store_daily_health_data(
     return metrics
 
 
-@router.get("/{date_str}", response_model=DailyMetricsResponse)
+@router.get("/{date_str}", response_model=MetricsResponse)
 async def get_daily_health_data(
     date_str: str,
     current_user: dict = Depends(get_current_user),
@@ -159,7 +159,7 @@ async def get_daily_health_data(
     Example:
         GET /health-data/2026-02-21
     """
-    user_id = str(current_user.get("_id"))
+    user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
     try:
         date_obj = date.fromisoformat(date_str)
