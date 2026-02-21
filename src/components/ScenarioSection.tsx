@@ -53,7 +53,7 @@ const ScenarioSection = () => (
 
       <div className="max-w-2xl mx-auto relative">
         {/* Timeline line */}
-        <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-risk-moderate to-primary/50 hidden sm:block" />
+        <div className="absolute left-6 top-0 bottom-0 w-px bg-border hidden sm:block" />
 
         <div className="space-y-8">
           {timelineSteps.map((s, i) => (

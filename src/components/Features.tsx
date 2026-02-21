@@ -15,8 +15,7 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transiti
 
 const Features = () => (
   <section id="features" className="py-32 relative">
-    <div className="absolute inset-0 gradient-radial pointer-events-none" />
-    <div className="container mx-auto px-6 relative z-10">
+    <div className="container mx-auto px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -38,7 +37,7 @@ const Features = () => (
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         {features.map((f, i) => (
-          <motion.div key={i} variants={item} className="glass p-8 group hover:glow-teal-sm transition-shadow duration-500">
+          <motion.div key={i} variants={item} className="glass p-8 group hover:shadow-md transition-shadow duration-500">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
               <f.icon className="w-6 h-6 text-primary" />
             </div>

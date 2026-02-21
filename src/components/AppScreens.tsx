@@ -3,7 +3,7 @@ import { Activity, TrendingDown, BarChart3, Moon, Footprints, Shield, Target, Be
 
 /* Miniature phone mockup component */
 const PhoneMockup = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="glass p-1 rounded-[2rem] glow-teal-sm max-w-[280px] mx-auto">
+  <div className="glass p-1 rounded-[2rem] max-w-[280px] mx-auto">
     <div className="bg-background rounded-[1.75rem] p-4 min-h-[420px] flex flex-col">
       <div className="flex items-center justify-center mb-4">
         <div className="w-20 h-1 rounded-full bg-muted" />
