@@ -168,7 +168,9 @@ function DailyInsightCard() {
           }}
         >
           Based on your sleep pattern, try to get{" "}
-          <Text style={{ fontFamily: typo.family.bold, color: colors.textPrimary }}>
+          <Text
+            style={{ fontFamily: typo.family.bold, color: colors.textPrimary }}
+          >
             15 mins of sunlight
           </Text>{" "}
           within the next hour to boost your circadian rhythm.
@@ -300,7 +302,11 @@ function MetricsGrid() {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Ionicons name="footsteps-outline" size={18} color={colors.primary} />
+            <Ionicons
+              name="footsteps-outline"
+              size={18}
+              color={colors.primary}
+            />
             <Text
               style={{
                 fontFamily: typo.family.medium,
@@ -414,7 +420,11 @@ function MetricsGrid() {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Ionicons name="phone-portrait-outline" size={18} color={colors.textSecondary} />
+            <Ionicons
+              name="phone-portrait-outline"
+              size={18}
+              color={colors.textSecondary}
+            />
             <Text
               style={{
                 fontFamily: typo.family.medium,
@@ -496,13 +506,7 @@ function MetricsGrid() {
 }
 
 // ─── Progress Bar ──────────────────────────────────────────────────
-function ProgressBar({
-  progress,
-  color,
-}: {
-  progress: number;
-  color: string;
-}) {
+function ProgressBar({ progress, color }: { progress: number; color: string }) {
   return (
     <View
       style={{
