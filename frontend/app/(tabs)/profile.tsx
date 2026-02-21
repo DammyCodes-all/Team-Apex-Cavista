@@ -13,7 +13,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { preventionTheme } from "@/constants/tokens";
 import { useAuth } from "@/contexts/auth-context";
 import { useGet } from "@/hooks/use-api-methods";
-import { type ProfileResponse } from "@/lib/api/profile";
+import { getErrorMessage } from "@/lib/api/client";
+import { type ProfileResponse, updateProfile } from "@/lib/api/profile";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
@@ -22,9 +23,11 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 // ─── Top Header (back arrow + Edit/Save) ──────────────────────────
 function TopHeader({
   isEditing,
+  isSaving,
   onToggleEdit,
 }: {
   isEditing: boolean;
+  isSaving: boolean;
   onToggleEdit: () => void;
 }) {
   return (
@@ -40,7 +43,7 @@ function TopHeader({
       <TouchableOpacity>
         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={onToggleEdit}>
+      <TouchableOpacity onPress={onToggleEdit} disabled={isSaving}>
         <Text
           style={{
             fontFamily: typo.family.medium,
@@ -49,7 +52,7 @@ function TopHeader({
             color: isEditing ? colors.success : colors.primary,
           }}
         >
-          {isEditing ? "Save" : "Edit"}
+          {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -601,6 +604,8 @@ function Footer({ onLogOut }: { onLogOut: () => void }) {
 export default function ProfileTabScreen() {
   const { signOut, user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: "Alex Doe",
     age: "34",
@@ -616,8 +621,41 @@ export default function ProfileTabScreen() {
   const { data: profile, execute: fetchProfile } =
     useGet<ProfileResponse>("/profile");
 
-  const handleToggleEdit = () => {
-    setIsEditing((prev) => !prev);
+  const handleToggleEdit = async () => {
+    if (!isEditing) {
+      setSaveError(null);
+      setIsEditing(true);
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    const parseNumber = (value: string, fallback = 0) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    try {
+      await updateProfile({
+        name: profileData.name.trim() || user?.fullName || "",
+        age: parseNumber(profileData.age),
+        gender: profile?.gender ?? "",
+        height_cm: parseNumber(profileData.height),
+        weight_kg: parseNumber(profileData.weight),
+        tracking_sleep: preferences.trackingSleep,
+        tracking_steps: preferences.trackingSteps,
+        tracking_screen_time: preferences.trackingScreenTime,
+        tracking_voice_stress: preferences.trackingVoiceStress,
+        goals_selected: [],
+        goals_custom: "",
+      });
+      setIsEditing(false);
+    } catch (error) {
+      setSaveError(getErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogOut = async () => {
@@ -679,7 +717,23 @@ export default function ProfileTabScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <TopHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} />
+        <TopHeader
+          isEditing={isEditing}
+          isSaving={isSaving}
+          onToggleEdit={handleToggleEdit}
+        />
+        {saveError ? (
+          <Text
+            style={{
+              color: colors.error,
+              fontFamily: typo.family.body,
+              fontSize: typo.size.caption,
+              marginBottom: 8,
+            }}
+          >
+            {saveError}
+          </Text>
+        ) : null}
         <AvatarSection name={displayName} subtitle={displaySubtitle} />
         <BaselineSummary />
         <PersonalInfo

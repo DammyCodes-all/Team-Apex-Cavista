@@ -16,8 +16,16 @@ const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ─── Header ─────────────────────────────────────────────────────────
 function Header() {
+  const { user } = useAuth();
+  const displayName = user?.fullName || "User";
+  const initials =
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U";
   return (
     <View
       style={{
@@ -46,11 +54,10 @@ function Header() {
             color: colors.textPrimary,
           }}
         >
-          Good Morning, Alex
+          Good Morning, {user?.fullName || "User"}!
         </Text>
       </View>
 
-      {/* Right: bell + avatar */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <TouchableOpacity
           style={{
@@ -84,7 +91,15 @@ function Header() {
             overflow: "hidden",
           }}
         >
-          <Ionicons name="person" size={24} color="#7D6608" />
+          <Text
+            style={{
+              fontFamily: typo.family.bold,
+              fontSize: 16,
+              color: "#7D6608",
+            }}
+          >
+            {initials}
+          </Text>
         </View>
       </View>
     </View>
