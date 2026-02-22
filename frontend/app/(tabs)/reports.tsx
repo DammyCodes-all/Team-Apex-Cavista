@@ -989,10 +989,16 @@ function ReportReadyModal({
 export default function ReportsTabScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const { data: reportData, execute: fetchReport } =
-    useGet<DashboardReportResponse>("/dashboard/report");
+  const [downloadFeedbackError, setDownloadFeedbackError] = useState<
+    string | null
+  >(null);
   const {
-    data: downloadData,
+    data: reportData,
+    loading: isReportLoading,
+    error: reportError,
+    execute: fetchReport,
+  } = useGet<DashboardReportResponse>("/dashboard/report");
+  const {
     error: downloadError,
     execute: fetchDownload,
   } = useGet<string>("/reports/download?format=csv&include_insights=true");
@@ -1003,21 +1009,23 @@ export default function ReportsTabScreen() {
 
   const handleDownload = async () => {
     setIsDownloading(true);
+    setDownloadFeedbackError(null);
     try {
-      await fetchDownload();
-      console.log("Report download response:", downloadData);
-      if (downloadData) {
+      const downloadResult = await fetchDownload();
+      if (downloadResult) {
         // Show success modal after download completes
         setModalVisible(true);
-      } else if (downloadError) {
-        console.error("Download error:", downloadError);
+      } else {
+        setDownloadFeedbackError("Unable to download report. Please try again.");
       }
-    } catch (err) {
-      console.error("Download error:", err);
+    } catch {
+      setDownloadFeedbackError("Unable to download report. Please try again.");
     } finally {
       setIsDownloading(false);
     }
   };
+
+  const visibleDownloadError = downloadFeedbackError || downloadError;
 
   const generatedDate =
     reportData?.meta?.generatedDate?.trim() ||
@@ -1046,6 +1054,55 @@ export default function ReportsTabScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TopHeader />
+        {reportError ? (
+          <View
+            style={{
+              backgroundColor: colors.error + "15",
+              borderColor: colors.error + "30",
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              marginBottom: 16,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: typo.family.medium,
+                  fontSize: typo.size.body,
+                  lineHeight: typo.lineHeight.body,
+                  color: colors.error,
+                }}
+              >
+                {reportError}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                fetchReport();
+              }}
+              disabled={isReportLoading}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={{
+                  fontFamily: typo.family.semiBold,
+                  fontSize: typo.size.body,
+                  lineHeight: typo.lineHeight.body,
+                  color: colors.error,
+                  opacity: isReportLoading ? 0.6 : 1,
+                }}
+              >
+                {isReportLoading ? "Retrying..." : "Retry"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <ReportHeader
           brand={reportData?.meta?.brand || "Prevention AI"}
           unit={reportData?.meta?.unit || "HEALTH INTELLIGENCE UNIT"}
@@ -1061,6 +1118,30 @@ export default function ReportsTabScreen() {
           valueUnit={reportValueUnit}
         />
         <ActionableInsights insights={reportInsights} />
+        {visibleDownloadError ? (
+          <View
+            style={{
+              backgroundColor: colors.error + "15",
+              borderColor: colors.error + "30",
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: typo.family.medium,
+                fontSize: typo.size.body,
+                lineHeight: typo.lineHeight.body,
+                color: colors.error,
+              }}
+            >
+              {visibleDownloadError}
+            </Text>
+          </View>
+        ) : null}
         <DownloadButton
           onPress={handleDownload}
           isLoading={isDownloading}
