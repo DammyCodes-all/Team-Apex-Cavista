@@ -13,7 +13,6 @@ async def read_profile(current_user=Depends(get_current_user), db=Depends(get_da
     user = await get_profile(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user["id"] = str(user.get("_id"))
     return user
 
 

@@ -22,7 +22,9 @@ async def get_profile(db, user_id: str) -> Dict[str, Any]:
         "tracking_sleep": user.get("tracking_sleep", True),
         "tracking_steps": user.get("tracking_steps", True),
         "tracking_screen_time": user.get("tracking_screen_time", True),
-        "tracking_voice_stress": user.get("tracking_voice_stress", False)
+        "tracking_voice_stress": user.get("tracking_voice_stress", False),
+        "goals_selected": user.get("goals_selected", []),
+        "goals_custom": user.get("goals_custom")
     }
 
 

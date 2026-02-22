@@ -14,6 +14,8 @@ class ProfileResponse(BaseModel):
     tracking_steps: bool = True
     tracking_screen_time: bool = True
     tracking_voice_stress: bool = False
+    goals_selected: Optional[list] = []
+    goals_custom: Optional[str] = None
 
 
 class UpdateProfileRequest(BaseModel):
@@ -41,7 +43,7 @@ class UpdateProfileRequest(BaseModel):
                 "tracking_screen_time": True,
                 "tracking_voice_stress": True,
                 "goals_selected": ["active", "focus", "health"],
-                "goals_custom": ""
+                "goals_custom": "Give me recommendations"
             }
         }
     }
