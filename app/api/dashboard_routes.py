@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from app.models.error import ErrorResponse
 from app.services.dashboard_service import get_dashboard_data
 from app.deps import get_current_user
 from app.db.client import get_database
@@ -10,7 +11,11 @@ from fastapi import HTTPException
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-@router.get("")
+@router.get("",
+            responses={
+                401: {"model": ErrorResponse},
+                500: {"model": ErrorResponse},
+            })
 async def dashboard(current_user=Depends(get_current_user), db=Depends(get_database)):
     """Retrieve the current dashboard snapshot for the user.
 

@@ -5,13 +5,19 @@ GET /ai/status endpoint returns the baseline learning status.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.services.health_profile_service import get_baseline_status
+from app.models.error import ErrorResponse
 from app.db.client import get_database
 from app.deps import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
-@router.get("/status")
+@router.get("/status",
+            responses={
+                401: {"model": ErrorResponse},
+                404: {"model": ErrorResponse},
+                500: {"model": ErrorResponse},
+            })
 async def ai_baseline_status(
     current_user: dict = Depends(get_current_user),
     db=Depends(get_database)

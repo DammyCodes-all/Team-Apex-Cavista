@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.profile import UpdateProfileRequest, ProfileResponse
+from app.models.error import ErrorResponse
 from app.services.user_service import get_profile, update_profile
 from app.deps import get_current_user
 from app.db.client import get_database
@@ -7,7 +8,11 @@ from app.db.client import get_database
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
-@router.get("", response_model=ProfileResponse)
+@router.get("", response_model=ProfileResponse,
+            responses={
+                401: {"model": ErrorResponse},
+                404: {"model": ErrorResponse},
+            })
 async def read_profile(current_user=Depends(get_current_user), db=Depends(get_database)):
     """Fetch the profile for the authenticated user.
 
@@ -28,7 +33,11 @@ async def read_profile(current_user=Depends(get_current_user), db=Depends(get_da
     return user
 
 
-@router.post("", response_model=ProfileResponse)
+@router.post("", response_model=ProfileResponse,
+             responses={
+                 401: {"model": ErrorResponse},
+                 500: {"model": ErrorResponse},
+             })
 async def create_or_update_profile(payload: UpdateProfileRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
     """Create or patch the profile for the authenticated user.
 
@@ -49,7 +58,11 @@ async def create_or_update_profile(payload: UpdateProfileRequest, current_user=D
     return user
 
 
-@router.put("", response_model=ProfileResponse)
+@router.put("", response_model=ProfileResponse,
+            responses={
+                401: {"model": ErrorResponse},
+                500: {"model": ErrorResponse},
+            })
 async def update_profile_endpoint(payload: UpdateProfileRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
     """Update profile fields for the authenticated user.
 

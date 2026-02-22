@@ -8,6 +8,7 @@ from datetime import date
 from app.deps import get_current_user
 from app.db.client import get_database
 from app.services.ai_service import get_latest_insights
+from app.models.error import ErrorResponse
 from app.services.health_profile_service import get_health_profile
 import logging
 
@@ -16,7 +17,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
-@router.get("/insights")
+@router.get("/insights",
+            responses={
+                401: {"model": ErrorResponse},
+                404: {"model": ErrorResponse},
+                202: {"model": ErrorResponse},
+                500: {"model": ErrorResponse},
+            })
 async def ai_insights(
     days: int = 7,
     current_user=Depends(get_current_user),

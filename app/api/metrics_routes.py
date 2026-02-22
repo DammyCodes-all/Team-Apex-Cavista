@@ -4,11 +4,17 @@ from app.services.metrics_service import ingest_metrics, get_metrics_for_date
 from app.deps import get_current_user
 from app.db.client import get_database
 from datetime import date
+from app.models.error import ErrorResponse
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 
-@router.post("", response_model=MetricsResponse)
+@router.post("", response_model=MetricsResponse,
+             responses={
+                 400: {"model": ErrorResponse},
+                 401: {"model": ErrorResponse},
+                 500: {"model": ErrorResponse},
+             })
 async def post_metrics(
     payload: MetricsCreate,
     current_user=Depends(get_current_user),
@@ -49,7 +55,12 @@ async def post_metrics(
     return result
 
 
-@router.get("/{metrics_date}", response_model=MetricsResponse)
+@router.get("/{metrics_date}", response_model=MetricsResponse,
+            responses={
+                400: {"model": ErrorResponse},
+                401: {"model": ErrorResponse},
+                404: {"model": ErrorResponse},
+            })
 async def get_metrics(metrics_date: str, current_user=Depends(get_current_user), db=Depends(get_database)):
     """Retrieve stored metrics for a specific date.
 
