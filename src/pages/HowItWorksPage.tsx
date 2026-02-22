@@ -28,11 +28,41 @@ const Hero = () => (
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
           From passive tracking to predictive insights — see how our AI engine protects your health before risks escalate.
         </p>
+
+        {/* Store buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+          <a
+            href="#download"
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+              <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[10px] opacity-80">Download on the</div>
+              <div className="text-sm font-semibold -mt-0.5">App Store</div>
+            </div>
+          </a>
+          <a
+            href="#download"
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+              <path d="M3.18 23.67L14.25 12.6 3.18.33c-.3-.15-.6 0-.6.45v22.44c0 .45.3.6.6.45zm12.8-12.8L5.04 1.43l9.22 5.32 1.72 1-1.72 1zm1.72-1L20.42 12l-2.72 2.13-1.72-1 1.72-1zM5.04 22.57l10.94-9.44 1.72 1-9.22 5.32z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[10px] opacity-80">Get it on</div>
+              <div className="text-sm font-semibold -mt-0.5">Google Play</div>
+            </div>
+          </a>
+        </div>
+
+        {/* Secondary links */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="#download" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity">
+          <a href="#download" className="inline-flex items-center gap-2 text-sm text-primary font-medium hover:underline">
             <Download className="w-4 h-4" /> Download APK
           </a>
-          <a href="#demo" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors">
+          <a href="#demo" className="inline-flex items-center gap-2 text-sm text-muted-foreground font-medium hover:text-primary transition-colors">
             <Play className="w-4 h-4" /> View Live Demo
           </a>
         </div>
