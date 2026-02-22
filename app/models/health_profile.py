@@ -50,6 +50,7 @@ class HealthProfileResponse(BaseModel):
     goals: Goals
     baseline_metrics: BaselineMetrics
     risk_score: float
+    demo_mode: bool
     created_at: datetime
     updated_at: datetime
 

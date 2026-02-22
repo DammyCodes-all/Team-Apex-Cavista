@@ -8,6 +8,7 @@ from app.utils.jwt import create_access_token
 from app.utils.tokens import generate_refresh_token, hash_token
 from app.config import settings as cfg
 from app.services.health_profile_service import create_health_profile
+from app.services import simulation_service
 
 
 async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any]:
@@ -22,8 +23,14 @@ async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any
     result = await db.users.insert_one(user)
     # still store Mongo _id but link documents with the uuid
     
-    # Auto-create health profile for baseline learning
+    # Auto-create health profile for baseline learning (demo mode enabled)
     await create_health_profile(db, user_id)
+    # kick off background simulation for demo users
+    try:
+        import asyncio
+        asyncio.create_task(simulation_service.start_simulation(db, user_id))
+    except Exception:
+        pass
     
     access = create_access_token({"sub": user_id})
     refresh = generate_refresh_token()
