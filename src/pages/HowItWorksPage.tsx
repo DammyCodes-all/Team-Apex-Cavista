@@ -95,37 +95,34 @@ const WorkflowSection = () => (
         <h2 className="text-3xl md:text-4xl font-bold text-foreground">Our Prevention Workflow</h2>
       </motion.div>
 
-      <div className="max-w-3xl mx-auto relative">
-        {/* Vertical connector */}
-        <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-px bg-border" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {steps.map((s, i) => (
+          <motion.div
+            key={i}
+            {...fade(i * 0.08)}
+            className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden group hover:shadow-md transition-shadow"
+          >
+            {/* Page number tab */}
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-bl-xl">
+              {String(i + 1).padStart(2, "0")}
+            </div>
 
-        <div className="space-y-0">
-          {steps.map((s, i) => (
-            <motion.div key={i} {...fade(i * 0.08)} className="relative flex gap-5 sm:gap-7 pb-10 last:pb-0">
-              {/* Node */}
-              <div className="relative z-10 flex-shrink-0">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center shadow-sm">
-                  <s.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                </div>
-              </div>
-              {/* Content */}
-              <div className="pt-1 sm:pt-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-primary">STEP {i + 1}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-              </div>
+            {/* Top accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-primary/60 to-primary/20" />
 
-              {/* Animated arrow */}
-              {i < steps.length - 1 && (
-                <div className="absolute left-[22px] sm:left-[30px] bottom-0 z-10">
-                  <ChevronDown className="w-4 h-4 text-primary animate-bounce" />
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+            <div className="p-6 pt-5">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <s.icon className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Step {i + 1}</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{s.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+            </div>
+
+            {/* Bottom page fold effect */}
+            <div className="h-8 bg-gradient-to-t from-muted/40 to-transparent" />
+          </motion.div>
+        ))}
       </div>
     </div>
   </section>
