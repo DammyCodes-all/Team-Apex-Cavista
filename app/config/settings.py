@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     # LLM_PROVIDER left for backward compatibility; keep at "openrouter"
     LLM_PROVIDER: str = "openrouter"
 
+    # optional local inference endpoint; if set, chat_service will POST to this
+    # URL instead of calling OpenRouter. Useful when running a self-hosted model
+    # (text-generation-webui, llama.cpp server, etc.). Example:
+    # LOCAL_LLM_URL: str = "http://localhost:8001/v1/chat/completions"
+    LOCAL_LLM_URL: str = ""
+
     # Runtime flags
     ENV: str = "development"
     DEBUG: bool = True

@@ -46,7 +46,23 @@ async def chat_with_user(user_id: str, messages: List[Dict]) -> Dict:
     payload = [system_message] + messages
 
     try:
-        # always use OpenRouter
+        # if a local inference endpoint is configured, use it instead
+        if getattr(settings, "LOCAL_LLM_URL", ""):
+            url = settings.LOCAL_LLM_URL
+            headers = {"Content-Type": "application/json"}
+            data = {
+                "model": settings.OPENROUTER_MODEL,
+                "messages": payload,
+                "temperature": 0.7,
+                "max_tokens": 500,
+            }
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(url, json=data, headers=headers)
+                r.raise_for_status()
+                result = r.json()
+            choice = result.get("choices", [])[0].get("message", {})
+            return {"role": choice.get("role"), "content": choice.get("content"), "provider": "local"}
+        # otherwise always use OpenRouter
         url = "https://api.openrouter.ai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"}
         data = {

@@ -100,6 +100,8 @@ Example insight (JSON):
 - `MAX_HISTORY_DAYS` — retention window
 - `USE_SYNTHETIC_DATA` / `SIMULATION_MODE` — testing flags
 - `OPENROUTER_MODEL` — chat model name sent to OpenRouter (e.g. `deepseek/deepseek-chat-v3-0324:free`).
+- `LOCAL_LLM_URL` — optional URL of a local inference service; if set the backend
+  will forward chat payloads there (must implement the same request schema).
 
 10. Testing & Validation
 ------------------------
