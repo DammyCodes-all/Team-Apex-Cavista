@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { preventionTheme } from "@/constants/tokens";
 import { useGet } from "@/hooks/use-api-methods";
+import { useStepCounter } from "@/hooks/use-step-counter";
+import { useStepSparkline } from "@/hooks/use-step-sparkline";
 import {
   Header,
   DailyInsightCard,
@@ -80,10 +82,20 @@ export default function HomeScreen() {
     execute: fetchDashboard,
   } = useGet<DashboardResponse>("/dashboard");
 
+  // Real accelerometer-based step counting (works in Expo Go Android)
+  const {
+    totalSteps: deviceSteps,
+    hourlyBuckets,
+    isAvailable: accelAvailable,
+  } = useStepCounter();
+  const {
+    sparkline: deviceSparkline,
+    trend: deviceTrend,
+    activityBars: deviceActivityBars,
+  } = useStepSparkline(hourlyBuckets, deviceSteps);
+
   useEffect(() => {
-    fetchDashboard()
-      .then((res) => console.log("Dashboard response:", res))
-      .catch((err) => console.error("Dashboard fetch error:", err));
+    fetchDashboard();
   }, [fetchDashboard]);
 
   // Transform dashboard API data to UI format
@@ -127,11 +139,10 @@ export default function HomeScreen() {
             ? "Moderate"
             : "High Usage";
 
-      // Generate sparkline from steps
-      const sparkline = Array.from(
-        { length: 12 },
-        () => Math.floor(Math.random() * 100) + dashboardData.steps / 100,
-      );
+      // Use real device sparkline when accelerometer is available, otherwise flat from API
+      const sparkline = accelAvailable
+        ? deviceSparkline
+        : Array(12).fill(Math.round(dashboardData.steps / 12));
 
       // Map goals from dashboard object, fall back to steps-based goal
       const goalEntries = Object.entries(dashboardData.goals ?? {});
@@ -154,23 +165,24 @@ export default function HomeScreen() {
               },
             ];
 
-      // Transform raw number array into ActivityBar objects
-      const rawBars = dashboardData.activityBars ?? [];
-      const maxBar = Math.max(...rawBars, 1); // avoid division by zero
-      const median =
-        [...rawBars].sort((a, b) => a - b)[Math.floor(rawBars.length / 2)] ?? 0;
-      const bars: ActivityBar[] =
-        rawBars.length > 0
-          ? rawBars.map((value) => ({
-              h: Math.round((value / maxBar) * 100),
-              active: value > median,
-            }))
-          : Array(7)
-              .fill(null)
-              .map((_, i) => ({
-                h: Math.random() * 100,
-                active: i % 2 === 0,
-              }));
+      // Use real device activity bars when accelerometer is available
+      let bars: ActivityBar[];
+      if (accelAvailable) {
+        bars = deviceActivityBars;
+      } else {
+        const rawBars = dashboardData.activityBars ?? [];
+        const maxBar = Math.max(...rawBars, 1);
+        const median =
+          [...rawBars].sort((a, b) => a - b)[Math.floor(rawBars.length / 2)] ??
+          0;
+        bars =
+          rawBars.length > 0
+            ? rawBars.map((value) => ({
+                h: Math.round((value / maxBar) * 100),
+                active: value > median,
+              }))
+            : Array(7).fill({ h: 0, active: false });
+      }
 
       // Build insight from dashboard insight object
       const di = dashboardData.insight;
@@ -191,10 +203,20 @@ export default function HomeScreen() {
             isNew: true,
           };
 
+      // When accelerometer is available, blend: show max of device vs API steps
+      const stepCount = accelAvailable
+        ? Math.max(deviceSteps, dashboardData.steps)
+        : dashboardData.steps;
+      const trend = accelAvailable
+        ? deviceTrend
+        : dashboardData.risk_score > 50
+          ? -10
+          : 12;
+
       return {
         stepsData: {
-          count: dashboardData.steps,
-          trend: dashboardData.risk_score > 50 ? -10 : 12,
+          count: stepCount,
+          trend,
           sparkline,
         },
         sleepData: {
@@ -211,7 +233,14 @@ export default function HomeScreen() {
         goals: mappedGoals,
         insight: insightObj,
       };
-    }, [dashboardData]);
+    }, [
+      dashboardData,
+      accelAvailable,
+      deviceSteps,
+      deviceSparkline,
+      deviceTrend,
+      deviceActivityBars,
+    ]);
 
   const renderDailyInsight = () => {
     if (loading) return <DailyInsightSkeleton />;
@@ -312,6 +341,152 @@ export default function HomeScreen() {
         )}
 
         {renderDailyInsight()}
+
+        {/* Live Step Counter — real accelerometer data */}
+        <View
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 8,
+            elevation: 3,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 12,
+            }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: accelAvailable
+                  ? colors.primary + "15"
+                  : "#FEE2E2",
+                justifyContent: "center",
+                alignItems: "center",
+                marginRight: 10,
+              }}
+            >
+              <Ionicons
+                name="footsteps"
+                size={18}
+                color={accelAvailable ? colors.primary : colors.error}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: typo.family.semiBold,
+                  fontSize: typo.size.caption,
+                  color: colors.textSecondary,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Live Step Counter
+              </Text>
+              <Text
+                style={{
+                  fontFamily: typo.family.body,
+                  fontSize: 11,
+                  color: accelAvailable ? colors.success : colors.error,
+                  marginTop: 1,
+                }}
+              >
+                {accelAvailable
+                  ? "● Tracking via accelerometer"
+                  : "● Sensor unavailable"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+            <Text
+              style={{
+                fontFamily: typo.family.bold,
+                fontSize: 42,
+                color: colors.textPrimary,
+                lineHeight: 48,
+              }}
+            >
+              {deviceSteps.toLocaleString()}
+            </Text>
+            <Text
+              style={{
+                fontFamily: typo.family.body,
+                fontSize: typo.size.body,
+                color: colors.textSecondary,
+                marginLeft: 6,
+              }}
+            >
+              steps today
+            </Text>
+          </View>
+
+          {/* Mini hourly bar chart */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-end",
+              height: 40,
+              marginTop: 14,
+              gap: 3,
+            }}
+          >
+            {hourlyBuckets.slice(0, new Date().getHours() + 1).map((val, i) => {
+              const maxVal = Math.max(...hourlyBuckets, 1);
+              const barH = Math.max((val / maxVal) * 36, val > 0 ? 3 : 1);
+              return (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: barH,
+                    backgroundColor:
+                      val > 0 ? colors.primary : colors.primary + "20",
+                    borderRadius: 2,
+                  }}
+                />
+              );
+            })}
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginTop: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: typo.family.body,
+                fontSize: 10,
+                color: colors.textSecondary,
+              }}
+            >
+              12 AM
+            </Text>
+            <Text
+              style={{
+                fontFamily: typo.family.body,
+                fontSize: 10,
+                color: colors.textSecondary,
+              }}
+            >
+              Now
+            </Text>
+          </View>
+        </View>
+
         {renderMetricsGrid()}
         {renderWeeklyGoals()}
       </ScrollView>
