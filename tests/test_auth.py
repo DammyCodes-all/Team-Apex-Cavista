@@ -36,6 +36,7 @@ def fake_get_db():
             self.refresh_tokens = FakeCollection()
             self.device_otps = FakeCollection()
             self.devices = FakeCollection()
+            self.health_profiles = FakeCollection()
 
     return FakeDB()
 
@@ -57,6 +58,11 @@ async def test_signup_and_login():
         assert "access_token" in signup_resp.cookies
         assert "refresh_token" in signup_resp.cookies
         data = signup_resp.json()
+        # ensure profile demo_mode flag created
+        db = app.dependency_overrides[deps.get_database]()
+        profile = await db.health_profiles.find_one({"user_id": data.get("user_id")})
+        assert profile is not None
+        assert profile.get("demo_mode") is True
 
         login_resp = await ac.post("/auth/login", json={"email":"test@example.com","password": strong_pw})
         assert login_resp.status_code in (200, 401)

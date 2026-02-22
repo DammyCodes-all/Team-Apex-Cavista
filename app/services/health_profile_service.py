@@ -40,8 +40,8 @@ async def create_health_profile(
         "enabled_signals": (enabled_signals or EnabledSignals()).model_dump(),
         "goals": (goals or Goals()).model_dump(),
         "baseline_metrics": BaselineMetrics().model_dump(),
-        "risk_score": 0.0,
-        "created_at": now,
+        "risk_score": 0.0,        # enable demo mode automatically for new users
+        "demo_mode": True,        "created_at": now,
         "updated_at": now,
     }
     
@@ -72,6 +72,9 @@ async def update_health_profile(
         Updated profile document
     """
     update_data["updated_at"] = datetime.utcnow()
+    # ensure demo_mode flag persists unless explicitly changed
+    if "demo_mode" not in update_data:
+        update_data["demo_mode"] = update_data.get("demo_mode", False)
     result = await db.health_profiles.find_one_and_update(
         {"user_id": user_id},
         {"$set": update_data},
