@@ -29,7 +29,7 @@ export const Topbar = () => {
             fontSize: preventionTheme.typography.size.subheadline,
           }}
         >
-          Prevention AI
+          Kin AI
         </Text>
 
         <View style={{ flexDirection: "row", gap: preventionTheme.spacing.s }}>

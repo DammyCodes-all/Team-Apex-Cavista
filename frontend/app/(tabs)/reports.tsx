@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -20,10 +20,47 @@ import Svg, {
   Circle,
 } from "react-native-svg";
 import { preventionTheme } from "@/constants/tokens";
+import { useGet } from "@/hooks/use-api-methods";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
 const SCREEN_WIDTH = Dimensions.get("window").width;
+
+interface ReportMetric {
+  id: string;
+  label: string;
+  value: string | number;
+  unit?: string;
+  trend?: string | number | null;
+}
+
+interface ReportInsight {
+  number: number;
+  title: string;
+  description?: string;
+}
+
+interface DashboardReportResponse {
+  actions?: {
+    downloadLabel?: string;
+    modal?: Record<string, unknown>;
+  };
+  dailyActivity?: {
+    data?: number[];
+    period?: string;
+    title?: string;
+    valueUnit?: string;
+  };
+  executiveSummary?: string;
+  insights?: ReportInsight[];
+  meta?: {
+    brand?: string;
+    generatedDate?: string;
+    status?: string;
+    unit?: string;
+  };
+  metrics?: ReportMetric[];
+}
 
 // ─── Top Header ─────────────────────────────────────────────────────
 function TopHeader() {
@@ -68,8 +105,18 @@ function TopHeader() {
   );
 }
 
-// ─── Report Header ──────────────────────────────────────────────────
-function ReportHeader() {
+function ReportHeader({
+  brand,
+  unit,
+  status,
+  generatedDate,
+}: {
+  brand: string;
+  unit: string;
+  status: string;
+  generatedDate: string;
+}) {
+  const isLowRisk = status.toUpperCase().includes("LOW");
   return (
     <View style={{ marginBottom: 20 }}>
       {/* Brand + Date */}
@@ -90,7 +137,7 @@ function ReportHeader() {
               color: colors.primary,
             }}
           >
-            Prevention AI
+            {brand}
           </Text>
           <Text
             style={{
@@ -101,7 +148,7 @@ function ReportHeader() {
               marginTop: 2,
             }}
           >
-            HEALTH INTELLIGENCE UNIT
+            {unit}
           </Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>
@@ -123,11 +170,7 @@ function ReportHeader() {
               color: colors.textPrimary,
             }}
           >
-            {new Date().toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {generatedDate}
           </Text>
         </View>
       </View>
@@ -162,22 +205,26 @@ function ReportHeader() {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            backgroundColor: "#E8F5E9",
+            backgroundColor: isLowRisk ? "#E8F5E9" : "#FEF2F2",
             paddingHorizontal: 10,
             paddingVertical: 4,
             borderRadius: 14,
           }}
         >
-          <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+          <Ionicons
+            name={isLowRisk ? "checkmark-circle" : "alert-circle"}
+            size={16}
+            color={isLowRisk ? "#10b981" : colors.error}
+          />
           <Text
             style={{
               fontFamily: typo.family.semiBold,
               fontSize: typo.size.caption,
               lineHeight: typo.lineHeight.caption,
-              color: "#10b981",
+              color: isLowRisk ? "#10b981" : colors.error,
             }}
           >
-            LOW RISK
+            {status}
           </Text>
         </View>
       </View>
@@ -195,7 +242,7 @@ function ReportHeader() {
 }
 
 // ─── Executive Summary ──────────────────────────────────────────────
-function ExecutiveSummary() {
+function ExecutiveSummary({ summary }: { summary: string }) {
   return (
     <View style={{ marginBottom: 24 }}>
       <Text
@@ -218,18 +265,27 @@ function ExecutiveSummary() {
           color: colors.textPrimary,
         }}
       >
-        Your health behaviors have shown a positive trend over the last 30 days
-        based on biometric analysis. Sleep consistency and stress management
-        markers have improved significantly, contributing to an overall
-        reduction in health risk factors.
+        {summary}
       </Text>
     </View>
   );
 }
 
 // ─── Metric Cards ───────────────────────────────────────────────────
-function MetricCards() {
+function MetricCards({ metrics }: { metrics: ReportMetric[] }) {
   const cardW = (SCREEN_WIDTH - 56) / 2;
+  const firstMetric = metrics[0] ?? {
+    id: "steps",
+    label: "STEPS",
+    value: 0,
+    unit: "",
+  };
+  const secondMetric = metrics[1] ?? {
+    id: "sleep",
+    label: "SLEEP",
+    value: "0h 0m",
+    unit: "",
+  };
 
   return (
     <View
@@ -271,7 +327,7 @@ function MetricCards() {
               letterSpacing: 1,
             }}
           >
-            STRESS{"\n"}MARKERS
+            {String(firstMetric.label).toUpperCase()}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
@@ -282,7 +338,7 @@ function MetricCards() {
               color: colors.textPrimary,
             }}
           >
-            22
+            {String(firstMetric.value)}
           </Text>
           <Text
             style={{
@@ -291,14 +347,8 @@ function MetricCards() {
               color: colors.textPrimary,
             }}
           >
-            %
+            {firstMetric.unit ?? ""}
           </Text>
-          <Ionicons
-            name="arrow-down"
-            size={16}
-            color={colors.primary}
-            style={{ marginLeft: 4 }}
-          />
         </View>
         <Text
           style={{
@@ -309,7 +359,7 @@ function MetricCards() {
             marginTop: 6,
           }}
         >
-          Reduction vs last{"\n"}month
+          Current value
         </Text>
       </View>
 
@@ -341,7 +391,7 @@ function MetricCards() {
               letterSpacing: 1,
             }}
           >
-            SLEEP QUALITY
+            {String(secondMetric.label).toUpperCase()}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
@@ -352,7 +402,7 @@ function MetricCards() {
               color: colors.textPrimary,
             }}
           >
-            8.2
+            {String(secondMetric.value)}
           </Text>
           <Text
             style={{
@@ -362,7 +412,7 @@ function MetricCards() {
               marginLeft: 4,
             }}
           >
-            hrs
+            {secondMetric.unit ?? ""}
           </Text>
         </View>
         <Text
@@ -374,7 +424,7 @@ function MetricCards() {
             marginTop: 6,
           }}
         >
-          Avg nightly duration
+          Current value
         </Text>
       </View>
     </View>
@@ -382,8 +432,18 @@ function MetricCards() {
 }
 
 // ─── Daily Activity Chart ───────────────────────────────────────────
-function DailyActivityChart() {
-  const data = [28, 25, 32, 38, 35, 42, 40, 45, 43, 48, 50, 46];
+function DailyActivityChart({
+  chartData,
+  title,
+  period,
+  valueUnit,
+}: {
+  chartData: number[];
+  title: string;
+  period: string;
+  valueUnit: string;
+}) {
+  const data = chartData.length > 1 ? chartData : [28, 25, 32, 38, 35, 42, 40];
   const labels = [
     "Mon",
     "",
@@ -443,8 +503,6 @@ function DailyActivityChart() {
   );
 
   const chartRef = useRef<View>(null);
-  const chartLayoutX = useRef(0);
-
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -486,7 +544,7 @@ function DailyActivityChart() {
             color: colors.textPrimary,
           }}
         >
-          Daily Activity vs. Rest
+          {title}
         </Text>
         <View
           style={{
@@ -504,7 +562,7 @@ function DailyActivityChart() {
               color: colors.error,
             }}
           >
-            Last 7 Days
+            {period}
           </Text>
         </View>
       </View>
@@ -589,7 +647,7 @@ function DailyActivityChart() {
                 color: "#FFFFFF",
               }}
             >
-              {activeValue} min
+              {activeValue} {valueUnit}
             </Text>
             {labels[activeIdx!] ? (
               <Text
@@ -627,27 +685,17 @@ function DailyActivityChart() {
 }
 
 // ─── Actionable Insights ────────────────────────────────────────────
-function ActionableInsights() {
-  const insights = [
-    {
-      number: 1,
-      title: "Maintain consistent sleep schedule",
-      description:
-        "Your circadian rhythm is stabilizing. Try to go to bed within the same 30-minute window.",
-    },
-    {
-      number: 2,
-      title: "Increase hydration by 10%",
-      description:
-        "Daily water intake is slightly below optimal levels for your activity intensity.",
-    },
-    {
-      number: 3,
-      title: "Post-activity cooldown",
-      description:
-        "Heart rate recovery could be improved with 5 minutes of guided breathing.",
-    },
-  ];
+function ActionableInsights({ insights }: { insights: ReportInsight[] }) {
+  const list =
+    insights.length > 0
+      ? insights
+      : [
+          {
+            number: 1,
+            title: "No insights available yet",
+            description: "Continue tracking to generate personalized guidance.",
+          },
+        ];
 
   return (
     <View style={{ marginBottom: 28 }}>
@@ -664,7 +712,7 @@ function ActionableInsights() {
         ACTIONABLE INSIGHTS
       </Text>
 
-      {insights.map((item, index) => (
+      {list.map((item, index) => (
         <View
           key={index}
           style={{
@@ -720,7 +768,7 @@ function ActionableInsights() {
                 color: colors.textSecondary,
               }}
             >
-              {item.description}
+              {item.description || ""}
             </Text>
           </View>
         </View>
@@ -730,13 +778,22 @@ function ActionableInsights() {
 }
 
 // ─── Download Button ────────────────────────────────────────────────
-function DownloadButton({ onPress }: { onPress: () => void }) {
+function DownloadButton({
+  onPress,
+  label,
+  isLoading,
+}: {
+  onPress: () => void;
+  label: string;
+  isLoading?: boolean;
+}) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
+      disabled={isLoading}
       style={{
-        backgroundColor: colors.primary,
+        backgroundColor: isLoading ? colors.primary + "80" : colors.primary,
         borderRadius: 16,
         paddingVertical: 16,
         flexDirection: "row",
@@ -744,9 +801,14 @@ function DownloadButton({ onPress }: { onPress: () => void }) {
         justifyContent: "center",
         gap: 8,
         marginBottom: 35,
+        opacity: isLoading ? 0.6 : 1,
       }}
     >
-      <Ionicons name="download-outline" size={20} color="#FFFFFF" />
+      <Ionicons
+        name={isLoading ? "cloud-download-outline" : "download-outline"}
+        size={20}
+        color="#FFFFFF"
+      />
       <Text
         style={{
           fontFamily: typo.family.semiBold,
@@ -755,7 +817,7 @@ function DownloadButton({ onPress }: { onPress: () => void }) {
           color: "#FFFFFF",
         }}
       >
-        Get Full PDF
+        {isLoading ? "Downloading..." : label}
       </Text>
     </TouchableOpacity>
   );
@@ -926,6 +988,56 @@ function ReportReadyModal({
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function ReportsTabScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { data: reportData, execute: fetchReport } =
+    useGet<DashboardReportResponse>("/dashboard/report");
+  const {
+    data: downloadData,
+    error: downloadError,
+    execute: fetchDownload,
+  } = useGet<string>("/reports/download?format=csv&include_insights=true");
+
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await fetchDownload();
+      console.log("Report download response:", downloadData);
+      if (downloadData) {
+        // Show success modal after download completes
+        setModalVisible(true);
+      } else if (downloadError) {
+        console.error("Download error:", downloadError);
+      }
+    } catch (err) {
+      console.error("Download error:", err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const generatedDate =
+    reportData?.meta?.generatedDate?.trim() ||
+    new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const reportTitle =
+    reportData?.dailyActivity?.title || "Daily Activity vs. Rest";
+  const reportPeriod = reportData?.dailyActivity?.period || "Last 7 Days";
+  const reportValueUnit = reportData?.dailyActivity?.valueUnit || "min";
+  const reportChartData = reportData?.dailyActivity?.data ?? [];
+
+  const reportInsights = reportData?.insights ?? [];
+  const reportExecutiveSummary =
+    reportData?.executiveSummary?.trim() ||
+    reportInsights[0]?.title ||
+    "No executive summary available.";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -934,12 +1046,26 @@ export default function ReportsTabScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TopHeader />
-        <ReportHeader />
-        <ExecutiveSummary />
-        <MetricCards />
-        <DailyActivityChart />
-        <ActionableInsights />
-        <DownloadButton onPress={() => setModalVisible(true)} />
+        <ReportHeader
+          brand={reportData?.meta?.brand || "Prevention AI"}
+          unit={reportData?.meta?.unit || "HEALTH INTELLIGENCE UNIT"}
+          status={reportData?.meta?.status || "LOW RISK"}
+          generatedDate={generatedDate}
+        />
+        <ExecutiveSummary summary={reportExecutiveSummary} />
+        <MetricCards metrics={reportData?.metrics ?? []} />
+        <DailyActivityChart
+          chartData={reportChartData}
+          title={reportTitle}
+          period={reportPeriod}
+          valueUnit={reportValueUnit}
+        />
+        <ActionableInsights insights={reportInsights} />
+        <DownloadButton
+          onPress={handleDownload}
+          isLoading={isDownloading}
+          label={reportData?.actions?.downloadLabel || "Get Full PDF"}
+        />
       </ScrollView>
 
       <ReportReadyModal

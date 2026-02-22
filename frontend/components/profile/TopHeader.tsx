@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { preventionTheme } from "@/constants/tokens";
 
 const colors = preventionTheme.colors.light;
@@ -17,6 +18,8 @@ export function TopHeader({
   isSaving,
   onToggleEdit,
 }: TopHeaderProps) {
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -26,7 +29,7 @@ export function TopHeader({
         marginBottom: 8,
       }}
     >
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
       <TouchableOpacity onPress={onToggleEdit} disabled={isSaving}>
