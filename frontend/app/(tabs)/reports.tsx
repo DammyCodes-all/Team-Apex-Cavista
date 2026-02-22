@@ -90,7 +90,7 @@ function ReportHeader() {
               color: colors.primary,
             }}
           >
-            Prevention AI
+            Kin AI
           </Text>
           <Text
             style={{

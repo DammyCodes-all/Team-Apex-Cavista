@@ -194,7 +194,7 @@ function AiMessageBubble({ message }: { message: ChatMessage }) {
           marginBottom: 6,
         }}
       >
-        Prevention AI
+        Kin AI
       </Text>
 
       <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
@@ -355,7 +355,7 @@ function ChatHeader() {
           color: colors.textPrimary,
         }}
       >
-        Prevention AI
+        Kin AI
       </Text>
     </View>
   );

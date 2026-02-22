@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/images/icon.png" alt="Prevention AI Logo" width="100" />
+  <img src="assets/images/icon.png" alt="Kin AI Logo" width="100" />
 </p>
 
-<h1 align="center">Prevention AI</h1>
+<h1 align="center">Kin AI</h1>
 
 <p align="center">
   <strong>Your Health, Forecasted</strong><br/>
@@ -38,7 +38,7 @@
 
 ## Overview
 
-**Prevention AI** is a cross-platform mobile health application built for the **Cavista Hackathon** by **Team Apex**. The app leverages AI to passively monitor user health patterns — including steps, sleep, screen time, location, and optional voice stress analysis — and provides personalized prevention insights and risk forecasts.
+**Kin AI** is a cross-platform mobile health application built for the **Cavista Hackathon** by **Team Apex**. The app leverages AI to passively monitor user health patterns — including steps, sleep, screen time, location, and optional voice stress analysis — and provides personalized prevention insights and risk forecasts.
 
 The app requires **zero daily input** from users. It learns your routines over 7 days and progressively delivers smarter, more actionable health recommendations.
 
