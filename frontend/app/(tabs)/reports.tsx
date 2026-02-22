@@ -781,16 +781,19 @@ function ActionableInsights({ insights }: { insights: ReportInsight[] }) {
 function DownloadButton({
   onPress,
   label,
+  isLoading,
 }: {
   onPress: () => void;
   label: string;
+  isLoading?: boolean;
 }) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
+      disabled={isLoading}
       style={{
-        backgroundColor: colors.primary,
+        backgroundColor: isLoading ? colors.primary + "80" : colors.primary,
         borderRadius: 16,
         paddingVertical: 16,
         flexDirection: "row",
@@ -798,9 +801,14 @@ function DownloadButton({
         justifyContent: "center",
         gap: 8,
         marginBottom: 35,
+        opacity: isLoading ? 0.6 : 1,
       }}
     >
-      <Ionicons name="download-outline" size={20} color="#FFFFFF" />
+      <Ionicons
+        name={isLoading ? "cloud-download-outline" : "download-outline"}
+        size={20}
+        color="#FFFFFF"
+      />
       <Text
         style={{
           fontFamily: typo.family.semiBold,
@@ -809,7 +817,7 @@ function DownloadButton({
           color: "#FFFFFF",
         }}
       >
-        {label}
+        {isLoading ? "Downloading..." : label}
       </Text>
     </TouchableOpacity>
   );
@@ -980,15 +988,36 @@ function ReportReadyModal({
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function ReportsTabScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { data: reportData, execute: fetchReport } =
+    useGet<DashboardReportResponse>("/dashboard/report");
   const {
-    data: reportData,
-    error: reportError,
-    execute: fetchReport,
-  } = useGet<DashboardReportResponse>("/dashboard/report");
+    data: downloadData,
+    error: downloadError,
+    execute: fetchDownload,
+  } = useGet<string>("/reports/download?format=csv&include_insights=true");
 
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await fetchDownload();
+      console.log("Report download response:", downloadData);
+      if (downloadData) {
+        // Show success modal after download completes
+        setModalVisible(true);
+      } else if (downloadError) {
+        console.error("Download error:", downloadError);
+      }
+    } catch (err) {
+      console.error("Download error:", err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const generatedDate =
     reportData?.meta?.generatedDate?.trim() ||
@@ -1033,7 +1062,8 @@ export default function ReportsTabScreen() {
         />
         <ActionableInsights insights={reportInsights} />
         <DownloadButton
-          onPress={() => setModalVisible(true)}
+          onPress={handleDownload}
+          isLoading={isDownloading}
           label={reportData?.actions?.downloadLabel || "Get Full PDF"}
         />
       </ScrollView>
