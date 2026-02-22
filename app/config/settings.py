@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
 
+    # AI / LLM Keys
+    OPENAI_API_KEY: str = ""
+
     # Runtime flags
     ENV: str = "development"
     DEBUG: bool = True
