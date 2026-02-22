@@ -2,6 +2,8 @@ from typing import Any, Dict
 from bson import ObjectId
 
 async def get_profile(db, user_id: str) -> Dict[str, Any]:
+    import logging
+    logging.info(f"user_service.get_profile called for {user_id}")
     # use the UUID user_id field; support legacy queries by _id
     user = await db.users.find_one({"user_id": user_id})
     if not user:
@@ -29,15 +31,22 @@ async def get_profile(db, user_id: str) -> Dict[str, Any]:
 
 
 async def update_profile(db, user_id: str, patch: Dict[str, Any]) -> Dict[str, Any]:
+    import logging
+    logging.info(f"user_service.update_profile called for {user_id} patch={patch}")
     # update using uuid field if available
     query = {"user_id": user_id}
     try:
-        await db.users.update_one(query, {"$set": patch})
-    except Exception:
+        result = await db.users.update_one(query, {"$set": patch})
+        logging.info(f"update_one result matched={result.matched_count} modified={result.modified_count}")
+    except Exception as e:
+        logging.error(f"error updating by user_id: {e}")
         # fallback to _id updates
         try:
             query = {"_id": ObjectId(user_id)}
-            await db.users.update_one(query, {"$set": patch})
-        except Exception:
-            pass
-    return await get_profile(db, user_id)
+            result = await db.users.update_one(query, {"$set": patch})
+            logging.info(f"fallback update result matched={result.matched_count} modified={result.modified_count}")
+        except Exception as e2:
+            logging.error(f"fallback update failed: {e2}")
+    updated = await get_profile(db, user_id)
+    logging.info(f"user_service.update_profile returning {updated}")
+    return updated

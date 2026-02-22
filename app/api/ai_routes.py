@@ -56,9 +56,17 @@ async def ai_insights(
         )
 
     logging.info(f"ai_insights called for user {user_id}, days={days}")
-    insights = await get_latest_insights(db, user_id, days)
-    logging.info(f"ai_insights returned {len(insights)} entries")
-    return insights or []
+    try:
+        insights = await get_latest_insights(db, user_id, days)
+        logging.info(f"ai_insights returned {len(insights)} entries")
+        return insights or []
+    except Exception as exc:
+        # unexpected failure, convert to structured HTTP 500
+        logging.exception("ai_insights failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error_type": "service_error", "detail": str(exc)}
+        )
 
 
 @router.get("/status",

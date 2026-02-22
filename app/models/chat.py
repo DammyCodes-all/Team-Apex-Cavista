@@ -31,7 +31,7 @@ class ChatResponse(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "example": {"role": "assistant", "content": "Try to keep a regular bedtime.", "any": {"source": "openrouter"}}
+            "example": {"role": "assistant", "content": "Try to keep a regular bedtime.", "any": {"provider": "gemini"}}
         }
     }
 

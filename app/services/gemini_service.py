@@ -1,37 +1,46 @@
-import os
 import logging
-from dotenv import load_dotenv
 
 from app.config.settings import settings
 
-load_dotenv()
+# new `google` package syntax (genai v1+) or older generativeai package
+try:
+    from google import genai
+except ImportError:
+    import google.generativeai as genai
 
-# google-generativeai package
-import google.generativeai as genai
-
-# configure with key from settings/env
-genai.configure(api_key=settings.GEMINI_API_KEY)
-
-# note: the specific Gemini model may change based on settings.  We
-# instantiate inside the function rather than once at import time so tests
-# or runtime config changes can take effect.
+# we will create a Client in ask_gemini; no global configuration required
 
 
 def ask_gemini(user_message: str) -> str:
     """Ask the configured Gemini model to generate a reply.
 
-    The underlying google-generativeai client can raise exceptions if the
-    model name is invalid or the API key is wrong; we log and re-raise a
-    `RuntimeError` so callers can treat it as a service failure.
+    Uses the newer google-genai client API (`genai.Client`) rather than the
+    older `GenerativeModel` helper.  This matches the sample you provided:
+
+        from google import genai
+        client = genai.Client()
+        response = client.models.generate_content(...)
+
+    Errors from the underlying client are logged and re-raised so callers can
+    convert them into HTTP errors.
     """
-    # look up model name each call so tests can tweak settings
-    model_name = getattr(settings, "GEMINI_MODEL", "gemini-1.0")
+    model_name = getattr(settings, "GEMINI_MODEL", "").strip()
+    if not model_name:
+        msg = "Gemini model not configured"
+        logging.error(msg)
+        raise RuntimeError(msg)
+    if not settings.GEMINI_API_KEY:
+        msg = "Gemini API key not configured"
+        logging.error(msg)
+        raise RuntimeError(msg)
+
     try:
-        # simple text-generation call; you can adapt for chat format
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(user_message)
-        return response.text
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        resp = client.models.generate_content(
+            model=model_name,
+            contents=user_message,
+        )
+        return resp.text
     except Exception as exc:
         logging.error(f"Gemini request failed (model={model_name}): {exc}")
-        # propagate original exception so caller can examine the message
         raise

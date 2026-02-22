@@ -1,8 +1,7 @@
-try:
-    # pydantic v2 moved BaseSettings to the pydantic-settings package
-    from pydantic_settings import BaseSettings
-except Exception:
-    from pydantic import BaseSettings
+# pydantic v2 separates settings into the pydantic-settings package
+# we depend directly on it so the import never fails.
+from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,13 +18,12 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
 
     # AI / LLM Keys
-    # only OpenRouter is supported now; if you need another provider adapt the
-    # chat_service accordingly.
-    OPENROUTER_API_KEY: str = ""
-    OPENROUTER_MODEL: str = "openrouter-gpt4o-mini"  # default OpenRouter model
+    # Gemini is the preferred provider; set `GEMINI_API_KEY` and `GEMINI_MODEL`
+    # (see below).  A local inference endpoint may also be configured via
+    # `LOCAL_LLM_URL`.
 
-    # LLM_PROVIDER left for backward compatibility; keep at "openrouter"
-    LLM_PROVIDER: str = "openrouter"
+    # NOTE: OpenRouter-related settings have been removed.  They may still
+    # appear in older .env files but are ignored.
 
     # optional local inference endpoint; if set, chat_service will POST to this
     # URL instead of calling OpenRouter. Useful when running a self-hosted model
@@ -33,8 +31,10 @@ class Settings(BaseSettings):
     # LOCAL_LLM_URL: str = "http://localhost:8001/v1/chat/completions"
     LOCAL_LLM_URL: str = ""
     GEMINI_API_KEY: str = ""  # Google Gemini API key, optional
-    # model identifier for Gemini; can be overridden via environment
-    GEMINI_MODEL: str = "gemini-1.0"  # update to a valid model name
+    # model identifier for Gemini; **must be set** when using Gemini.
+    # leave empty to disable Gemini and fall back to OpenRouter/local model.
+    GEMINI_MODEL: str = ""  # e.g. "gemini-1.5" or "gemini-1.5-pro"
+    # Deprecated variables (ignored): OPENROUTER_API_KEY, OPENROUTER_MODEL, LLM_PROVIDER
 
     # Runtime flags
     ENV: str = "development"
@@ -52,8 +52,9 @@ class Settings(BaseSettings):
     USE_SYNTHETIC_DATA: bool = False
     SIMULATION_MODE: bool = False
 
-    class Config:
-        env_file = ".env"
+    # ignore extra environment variables such as deprecated OpenRouter keys
+    # and load values from .env
+    model_config = ConfigDict(extra="ignore", env_file=".env")
 
 
 settings = Settings()

@@ -485,6 +485,18 @@ async def get_latest_insights(db, user_id: str, days: int = 7) -> List[Dict[str,
     To avoid empty results we now return all insights for the user, sorted by
     date.
     """
-    logging.info(f"get_latest_insights: querying for user {user_id}")
-    cursor = db.ai_insights.find({"user_id": user_id}).sort("date", -1)
-    return await cursor.to_list(length=None)
+    logging.info(f"get_latest_insights: querying for user {user_id}, days={days}")
+    query: Dict[str, Any] = {"user_id": user_id}
+    if days and days > 0:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        # assume `date` field is stored as ISO string or datetime
+        query["date"] = {"$gte": cutoff}
+    cursor = db.ai_insights.find(query).sort("date", -1)
+    docs = await cursor.to_list(length=None)
+    # convert any ObjectId fields to strings so FastAPI can encode them
+    for d in docs:
+        if "_id" in d:
+            d["_id"] = str(d["_id"])
+        if "user_id" in d and not isinstance(d["user_id"], str):
+            d["user_id"] = str(d["user_id"])
+    return docs

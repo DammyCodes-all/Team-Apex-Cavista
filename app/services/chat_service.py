@@ -1,19 +1,20 @@
 """
-Simple chat service using an LLM.  By default this example uses OpenAI
-GPT-4.1; you can swap in any other provider by modifying the `invoke_model`
-function.
+Lightweight wrapper that sends user messages to the configured LLM backend.
+
+The service currently supports two options:
+
+* a self‑hosted/local HTTP endpoint (`LOCAL_LLM_URL`), or
+* Google Gemini (requires `GEMINI_API_KEY` and `GEMINI_MODEL`).
+
+If neither is configured the function will raise a `RuntimeError`.
 """
 from typing import List, Dict
 from app.config.settings import settings
 import logging
 
-# only OpenRouter provider is supported; httpx is used for requests
 import httpx
-
-# initialize the client once
-# ensure OpenRouter key is available
-if not settings.OPENROUTER_API_KEY:
-    raise RuntimeError("OpenRouter API key must be configured (OPENROUTER_API_KEY)")
+from httpx import HTTPStatusError, RequestError
+from app.services.gemini_service import ask_gemini
 
 
 def build_system_prompt() -> str:
@@ -26,58 +27,41 @@ def build_system_prompt() -> str:
 
 
 async def chat_with_user(user_id: str, messages: List[Dict]) -> Dict:
-    """Send a chat request to the configured model.
+    """Route chat messages to the appropriate LLM backend.
 
-    `messages` should be a list of dicts with `role` and `content` keys
-    (same format as the OpenAI chat API). The model name sent to OpenRouter is
-    taken from `settings.OPENROUTER_MODEL`. The function automatically prepends
-    a system prompt and may optionally fetch context such as the latest
-    AI insight for the user.
+    Returns a dict with `role`, `content`, and `provider` keys matching the
+    format used by the endpoint.  Raises `RuntimeError` on failure.
     """
-    # optionally load context from DB
-    # from app.db.client import get_database
-    # db = get_database(None)
-    # last_insight = await db.ai_insights.find_one({"user_id": user_id}, sort=[("date", -1)])
-    # if last_insight:
-    #     messages.insert(0, {"role": "system", "content": f"Latest risk score: {last_insight['risk_score']}"})
-
     # prepend system prompt
     system_message = {"role": "system", "content": build_system_prompt()}
     payload = [system_message] + messages
 
-    try:
-        # if a local inference endpoint is configured, use it instead
-        if getattr(settings, "LOCAL_LLM_URL", ""):
-            url = settings.LOCAL_LLM_URL
-            headers = {"Content-Type": "application/json"}
-            data = {
-                "model": settings.OPENROUTER_MODEL,
-                "messages": payload,
-                "temperature": 0.7,
-                "max_tokens": 500,
-            }
+    # local inference has highest priority
+    if getattr(settings, "LOCAL_LLM_URL", ""):
+        url = settings.LOCAL_LLM_URL
+        headers = {"Content-Type": "application/json"}
+        data = {"messages": payload, "temperature": 0.7, "max_tokens": 500}
+        try:
             async with httpx.AsyncClient(timeout=30) as client:
                 r = await client.post(url, json=data, headers=headers)
                 r.raise_for_status()
                 result = r.json()
             choice = result.get("choices", [])[0].get("message", {})
             return {"role": choice.get("role"), "content": choice.get("content"), "provider": "local"}
-        # otherwise always use OpenRouter
-        url = "https://api.openrouter.ai/v1/chat/completions"
-        headers = {"Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"}
-        data = {
-            "model": settings.OPENROUTER_MODEL,
-            "messages": payload,
-            "temperature": 0.7,
-            "max_tokens": 500,
-        }
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(url, json=data, headers=headers)
-            r.raise_for_status()
-            result = r.json()
-        choice = result["choices"][0]["message"]
-        return {"role": choice.get("role"), "content": choice.get("content"), "provider": "openrouter"}
-    except Exception as e:
-        logging.error(f"chat_with_user error: {e}")
-        # raise so caller returns 503
-        raise RuntimeError("LLM unavailable")
+        except Exception as exc:
+            logging.error(f"local LLM error: {exc}")
+            raise
+
+    # fall back to Gemini if configured
+    if settings.GEMINI_API_KEY and settings.GEMINI_MODEL:
+        # Gemini expects plain text; we only send the last user message
+        user_text = messages[-1].get("content", "") if messages else ""
+        try:
+            ai_text = ask_gemini(user_text)
+            return {"role": "assistant", "content": ai_text, "provider": "gemini"}
+        except Exception:
+            # propagate so the caller can turn it into an HTTP error
+            raise
+
+    # nothing to call
+    raise RuntimeError("no LLM provider configured")

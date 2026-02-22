@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+import logging
 from app.models.profile import UpdateProfileRequest, ProfileResponse
 from app.models.error import ErrorResponse
 from app.services.user_service import get_profile, update_profile
@@ -26,7 +27,9 @@ async def read_profile(current_user=Depends(get_current_user), db=Depends(get_da
     ```
     """
     user_id = current_user.get("user_id") or str(current_user.get("_id"))
+    logging.info(f"read_profile called for {user_id}")
     user = await get_profile(db, user_id)
+    logging.info(f"read_profile returning {user}")
     if not user:
         raise HTTPException(status_code=404, detail={"error_type": "not_found", "detail": "User not found"})
     user["id"] = str(user.get("_id"))
@@ -54,7 +57,9 @@ async def create_or_update_profile(payload: UpdateProfileRequest, current_user=D
     """
     patched = payload.model_dump(exclude_none=True)
     user_id = current_user.get("user_id") or str(current_user.get("_id"))
+    logging.info(f"create_or_update_profile patch for {user_id}: {patched}")
     user = await update_profile(db, user_id, patched)
+    logging.info(f"create_or_update_profile result: {user}")
     return user
 
 
@@ -70,5 +75,7 @@ async def update_profile_endpoint(payload: UpdateProfileRequest, current_user=De
     """
     patched = payload.model_dump(exclude_none=True)
     user_id = current_user.get("user_id") or str(current_user.get("_id"))
+    logging.info(f"update_profile_endpoint patch for {user_id}: {patched}")
     user = await update_profile(db, user_id, patched)
+    logging.info(f"update_profile_endpoint result: {user}")
     return user

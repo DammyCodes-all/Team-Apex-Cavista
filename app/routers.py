@@ -20,6 +20,8 @@ router.include_router(profile_routes.router)
 router.include_router(ai_routes.router)
 router.include_router(chat_routes.router)
 router.include_router(dashboard_routes.router)
+# legacy report export endpoint
+router.include_router(reports_controller.router)
 
 # legacy endpoints (optional) - removed to prevent duplicates; functionality should be
 # migrated into the new /api modules when needed.
