@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { useMemo } from "react";
 import {
   SafeAreaView,
+  ScrollView,
   Switch,
   Text,
   TouchableOpacity,
@@ -76,15 +77,16 @@ export default function OnboardingStepTwo() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
       <OnboardingSwipeView step={2} totalSteps={5}>
-        <View
+        <ScrollView
           className="flex-1 px-4"
           style={{
-            paddingTop: 20,
-            paddingBottom: 20,
-            backgroundColor: "#C9DCE8",
+            paddingTop: 25,
+            backgroundColor: "#F5F8FB",
           }}
+          contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
         >
           <View className="items-center pt-l">
             <OnboardingStepDots
@@ -101,24 +103,25 @@ export default function OnboardingStepTwo() {
             />
           </View>
 
-          <View className="mt-l px-1">
+          <View className="mt-m px-1">
             <Text
+              className="text-center"
               style={{
                 color: "#2D3449",
-                fontSize: 44 / 2,
-                lineHeight: 52 / 2,
+                fontSize: 26,
+                lineHeight: 42,
                 fontFamily: preventionTheme.typography.family.bold,
               }}
             >
-              Your AI Needs Permission to{"\n"}Monitor Trends
+              Monitor Your Trends
             </Text>
 
             <Text
-              className="mt-m"
+              className="mt-sm text-center"
               style={{
                 color: "#45566A",
                 fontSize: 16,
-                lineHeight: 26,
+                lineHeight: 22,
                 fontFamily: preventionTheme.typography.family.body,
               }}
             >
@@ -242,7 +245,7 @@ export default function OnboardingStepTwo() {
               </TouchableOpacity>
             </Link>
           </View>
-        </View>
+        </ScrollView>
       </OnboardingSwipeView>
     </SafeAreaView>
   );

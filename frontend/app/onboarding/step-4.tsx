@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -92,31 +93,40 @@ function GoalCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
-      className="flex-1 rounded-3xl"
       style={{
-        backgroundColor: isSelected ? "#E8F4F9" : "#FFFFFF",
+        flex: 1,
+        backgroundColor: isSelected ? "#EAF6FC" : "#FFFFFF",
         borderWidth: isSelected ? 2 : 1,
-        borderColor: isSelected ? primaryColor : "#D8E4EC",
-        paddingHorizontal: 12,
-        paddingVertical: 16,
+        borderColor: isSelected ? primaryColor : "#E2EAF0",
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 18,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: isSelected ? 0.08 : 0.04,
+        shadowRadius: 4,
+        elevation: isSelected ? 3 : 1,
       }}
     >
-      <Text style={{ fontSize: 42, marginBottom: 8 }}>{goal.emoji}</Text>
+      <Text style={{ fontSize: 36, marginBottom: 10 }}>{goal.emoji}</Text>
       <Text
+        numberOfLines={1}
         style={{
           color: "#2D3449",
-          fontSize: 18,
+          fontSize: 16,
           fontFamily: preventionTheme.typography.family.semiBold,
         }}
       >
         {displayTitle}
       </Text>
       <Text
+        numberOfLines={2}
         style={{
-          color: "#60718A",
+          color: "#7A8DA0",
           fontSize: 12,
+          lineHeight: 17,
           fontFamily: preventionTheme.typography.family.body,
-          marginTop: 6,
+          marginTop: 4,
         }}
       >
         {displaySubtitle}
@@ -126,14 +136,14 @@ function GoalCard({
         <View
           style={{
             position: "absolute",
-            top: 8,
-            right: 8,
+            top: 10,
+            right: 10,
             backgroundColor: primaryColor,
             borderRadius: 12,
             padding: 2,
           }}
         >
-          <MaterialIcons name="check" size={16} color="#FFFFFF" />
+          <MaterialIcons name="check" size={14} color="#FFFFFF" />
         </View>
       )}
     </TouchableOpacity>
@@ -216,92 +226,115 @@ export default function OnboardingStepFour() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
       <OnboardingSwipeView step={4} totalSteps={5}>
-        <ScrollView
-          className="flex-1 px-4"
-          contentContainerStyle={{
-            paddingTop: 20,
-            paddingBottom: 60,
-            backgroundColor: "#C9DCE8",
-          }}
-        >
-          <View className="items-center pt-l">
-            <OnboardingStepDots
-              step={4}
-              totalSteps={5}
-              labelColor="#5C6875"
-              labelFontSize={16}
-              labelFontFamily={preventionTheme.typography.family.medium}
-              activeColor={colors.primary}
-              inactiveColor="#90A5B5"
-              activeSize={16}
-              inactiveSize={8}
-              gap={10}
-            />
-          </View>
+        <View style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 55,
+              paddingBottom: 20,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Step dots */}
+            <View style={{ alignItems: "center", marginBottom: 24 }}>
+              <OnboardingStepDots
+                step={4}
+                totalSteps={5}
+                labelColor="#5C6875"
+                labelFontSize={16}
+                labelFontFamily={preventionTheme.typography.family.medium}
+                activeColor={colors.primary}
+                inactiveColor="#90A5B5"
+                activeSize={16}
+                inactiveSize={8}
+                gap={10}
+              />
+            </View>
 
-          <View className="mt-xl items-center px-l">
+            {/* Heading */}
             <Text
               style={{
                 color: "#2D3449",
-                fontSize: 42 / 2,
-                lineHeight: 50 / 2,
+                fontSize: 26,
+                lineHeight: 36,
                 fontFamily: preventionTheme.typography.family.bold,
+                textAlign: "center",
+                marginBottom: 8,
               }}
             >
               What Matters Most to You?
             </Text>
-
             <Text
-              className="mt-s text-center"
               style={{
                 color: "#4E6177",
-                fontSize: 16,
-                lineHeight: 26,
+                fontSize: 15,
+                lineHeight: 22,
                 fontFamily: preventionTheme.typography.family.body,
+                textAlign: "center",
+                marginBottom: 28,
               }}
             >
-              Help us prioritize the insights you&apos;ll see first
+              Help us prioritize the insights you'll see first
             </Text>
-          </View>
 
-          <View className="mt-l" style={{ gap: 12 }}>
-            {renderGoalRows()}
-          </View>
+            {/* Goal grid */}
+            <View style={{ gap: 12 }}>{renderGoalRows()}</View>
 
-          <View className="mt-auto pt-l">
+            {/* Counter */}
             <Text
-              className="text-center"
               style={{
-                color: "#5B6D82",
+                color: selectedGoals.length > 0 ? colors.primary : "#7A8DA0",
                 fontSize: 14,
                 fontFamily: preventionTheme.typography.family.medium,
-                marginBottom: 14,
+                textAlign: "center",
+                marginTop: 20,
               }}
             >
-              Select at least 1 goal
+              {selectedGoals.length > 0
+                ? `${selectedGoals.length} goal${selectedGoals.length > 1 ? "s" : ""} selected`
+                : "Select at least 1 goal"}
             </Text>
 
             {goalError ? (
               <Text
-                className="text-center"
                 style={{
                   color: colors.error,
                   fontSize: 12,
                   fontFamily: preventionTheme.typography.family.body,
-                  marginBottom: 10,
+                  textAlign: "center",
+                  marginTop: 8,
                 }}
               >
                 {goalError}
               </Text>
             ) : null}
+          </ScrollView>
 
+          {/* Fixed bottom button */}
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+              paddingBottom: 24,
+              backgroundColor: "#F5F8FB",
+              borderTopWidth: 1,
+              borderTopColor: "#E8EEF4",
+            }}
+          >
             <TouchableOpacity
               onPress={handleContinue}
-              className="h-14 items-center justify-center rounded-button"
+              activeOpacity={0.85}
               style={{
+                height: 56,
                 backgroundColor: colors.primary,
+                borderRadius: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
                 opacity: selectedGoals.length > 0 ? 1 : 0.5,
               }}
             >
@@ -314,9 +347,10 @@ export default function OnboardingStepFour() {
               >
                 Continue
               </Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </OnboardingSwipeView>
 
       <Modal

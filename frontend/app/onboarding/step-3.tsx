@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -5,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -32,9 +34,9 @@ export default function OnboardingStepThree() {
   const weight = useOnboardingStore((state) => state.weight);
   const setWeight = useOnboardingStore((state) => state.setWeight);
 
-  // Local modal state
+  // Local state
   const [showGenderModal, setShowGenderModal] = useState(false);
-  const [showWhyWeAsk, setShowWhyWeAsk] = useState(false);
+  const [skipAnonymity, setSkipAnonymity] = useState(false);
   const [errors, setErrors] = useState<{
     age?: string;
     gender?: string;
@@ -42,33 +44,8 @@ export default function OnboardingStepThree() {
     weight?: string;
   }>({});
 
-  const WHY_WE_ASK_ITEMS = [
-    {
-      field: "Name",
-      reason:
-        "Helps us personalize your health insights and recommendations based on your preferences.",
-    },
-    {
-      field: "Age",
-      reason:
-        "Age-specific health patterns are critical for accurate risk assessment and prevention strategies.",
-    },
-    {
-      field: "Gender",
-      reason:
-        "Different health profiles between genders allow us to provide more targeted insights.",
-    },
-    {
-      field: "Height",
-      reason:
-        "Used to calculate BMI and understand your baseline physical metrics for health analysis.",
-    },
-    {
-      field: "Weight",
-      reason:
-        "Combines with height to assess your health metrics and track meaningful changes over time.",
-    },
-  ];
+  const name = useOnboardingStore((state) => state.name);
+  const setName = useOnboardingStore((state) => state.setName);
 
   const GENDER_OPTIONS = [
     { id: "female", label: "Female", icon: "female" },
@@ -118,98 +95,143 @@ export default function OnboardingStepThree() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
       <OnboardingSwipeView step={3} totalSteps={5}>
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingHorizontal: 16,
-            paddingTop: 20,
-            paddingBottom: 20,
-          }}
-          style={{
-            backgroundColor: "#C9DCE8",
-          }}
-        >
-          <View className="items-center pt-l">
-            <OnboardingStepDots
-              step={3}
-              totalSteps={5}
-              labelColor="#5C6875"
-              labelFontSize={16}
-              labelFontFamily={preventionTheme.typography.family.medium}
-              activeColor={colors.primary}
-              inactiveColor="#90A5B5"
-              activeSize={16}
-              inactiveSize={8}
-              gap={10}
-            />
-          </View>
-
-          <View style={{ flex: 1, justifyContent: "center" }}>
-            <View className="mt-xl items-center px-l">
-              <Text
-                style={{
-                  color: "#2D3449",
-                  fontSize: 42 / 2,
-                  lineHeight: 50 / 2,
-                  fontFamily: preventionTheme.typography.family.bold,
-                }}
-              >
-                Let&apos;s Learn About You
-              </Text>
-
-              <Text
-                className="mt-s text-center"
-                style={{
-                  color: "#4E6177",
-                  fontSize: 16,
-                  lineHeight: 26,
-                  fontFamily: preventionTheme.typography.family.body,
-                }}
-              >
-                This helps the AI give personalized health insights.
-              </Text>
+        <View style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 55,
+              paddingBottom: 120,
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Step dots */}
+            <View style={{ alignItems: "center", marginBottom: 24 }}>
+              <OnboardingStepDots
+                step={3}
+                totalSteps={5}
+                labelColor="#5C6875"
+                labelFontSize={16}
+                labelFontFamily={preventionTheme.typography.family.medium}
+                activeColor={colors.primary}
+                inactiveColor="#90A5B5"
+                activeSize={16}
+                inactiveSize={8}
+                gap={10}
+              />
             </View>
 
-            <View
-              className="mt-l py-5 rounded-3xl "
+            {/* Heading */}
+            <Text
               style={{
-                backgroundColor: "#EEF4F8",
-                padding: 15,
+                color: "#2D3449",
+                fontSize: 26,
+                lineHeight: 40,
+                fontFamily: preventionTheme.typography.family.bold,
+                marginBottom: 5,
               }}
             >
-              <View style={{ gap: 10 }}>
-                <View
-                  className="flex-row items-center rounded-2xl"
+              Let's Learn About You
+            </Text>
+            <Text
+              style={{
+                color: "#4E6177",
+                fontSize: 16,
+                lineHeight: 24,
+                fontFamily: preventionTheme.typography.family.body,
+                marginBottom: 16,
+              }}
+            >
+              This helps the AI give personalized health insights.
+            </Text>
+
+            {/* Full Name */}
+            <Text
+              style={{
+                color: "#2D3449",
+                fontSize: 14,
+                fontFamily: preventionTheme.typography.family.semiBold,
+                marginBottom: 8,
+              }}
+            >
+              Full Name
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#FFFFFF",
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: "#E2EAF0",
+                paddingHorizontal: 14,
+                height: 56,
+                marginBottom: 10,
+              }}
+            >
+              <Ionicons name="person-outline" size={20} color="#A0B0C0" />
+              <TextInput
+                placeholder="Enter your full name"
+                placeholderTextColor="#A0B0C0"
+                value={name}
+                onChangeText={setName}
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  color: "#2D3449",
+                  fontSize: 16,
+                  fontFamily: preventionTheme.typography.family.body,
+                }}
+              />
+            </View>
+
+            {/* Age + Gender row */}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 12,
+                marginBottom: 10,
+              }}
+            >
+              {/* Age */}
+              <View style={{ flex: 1 }}>
+                <Text
                   style={{
-                    backgroundColor: "#F5F8FB",
-                    borderWidth: 1,
-                    borderColor: "#D3DEE8",
-                    paddingHorizontal: 14,
-                    height: 52,
+                    color: "#2D3449",
+                    fontSize: 14,
+                    fontFamily: preventionTheme.typography.family.semiBold,
+                    marginBottom: 8,
                   }}
                 >
-                  <MaterialIcons
-                    name="calendar-today"
-                    size={20}
-                    color="#90A2B7"
-                  />
+                  Age
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: errors.age ? colors.error : "#E2EAF0",
+                    paddingHorizontal: 14,
+                    height: 56,
+                  }}
+                >
                   <TextInput
-                    placeholder="Age"
-                    placeholderTextColor="#8A9CB1"
+                    placeholder="28"
+                    placeholderTextColor="#A0B0C0"
                     keyboardType="number-pad"
                     value={age}
-                    onChangeText={(value) => {
-                      setAge(value);
-                      if (errors.age) {
+                    onChangeText={(v) => {
+                      setAge(v);
+                      if (errors.age)
                         setErrors((prev) => ({ ...prev, age: undefined }));
-                      }
                     }}
                     style={{
                       flex: 1,
-                      marginLeft: 12,
                       color: "#2D3449",
                       fontSize: 16,
                       fontFamily: preventionTheme.typography.family.body,
@@ -222,88 +244,142 @@ export default function OnboardingStepThree() {
                       color: colors.error,
                       fontSize: 12,
                       fontFamily: preventionTheme.typography.family.body,
+                      marginTop: 4,
                     }}
                   >
                     {errors.age}
                   </Text>
                 ) : null}
+              </View>
 
-                <TouchableOpacity
-                  onPress={() => setShowGenderModal(true)}
-                  className="flex-row items-center rounded-2xl"
-                  activeOpacity={0.8}
+              {/* Gender */}
+              <View style={{ flex: 1.4 }}>
+                <Text
                   style={{
-                    backgroundColor: "#F5F8FB",
-                    borderWidth: 1,
-                    borderColor: "#D3DEE8",
-                    paddingHorizontal: 14,
-                    height: 52,
+                    color: "#2D3449",
+                    fontSize: 14,
+                    fontFamily: preventionTheme.typography.family.semiBold,
+                    marginBottom: 8,
                   }}
                 >
-                  <MaterialIcons
-                    name="sentiment-satisfied"
-                    size={20}
-                    color="#90A2B7"
-                  />
+                  Gender
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowGenderModal(true)}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: errors.gender ? colors.error : "#E2EAF0",
+                    paddingHorizontal: 14,
+                    height: 56,
+                  }}
+                >
+                  <Ionicons name="people-outline" size={20} color="#A0B0C0" />
                   <Text
                     style={{
-                      marginLeft: 12,
-                      color: gender ? "#2D3449" : "#8A9CB1",
+                      flex: 1,
+                      marginLeft: 10,
+                      color: gender ? "#2D3449" : "#A0B0C0",
                       fontSize: 16,
                       fontFamily: preventionTheme.typography.family.body,
-                      flex: 1,
                     }}
                   >
                     {gender
                       ? GENDER_OPTIONS.find((g) => g.id === gender)?.label
                       : "Select gender"}
                   </Text>
-                  <MaterialIcons
-                    name="keyboard-arrow-down"
-                    size={22}
-                    color="#90A2B7"
+                  <Ionicons
+                    name="chevron-down-outline"
+                    size={18}
+                    color="#A0B0C0"
                   />
                 </TouchableOpacity>
+                {errors.gender ? (
+                  <Text
+                    style={{
+                      color: colors.error,
+                      fontSize: 12,
+                      fontFamily: preventionTheme.typography.family.body,
+                      marginTop: 4,
+                    }}
+                  >
+                    {errors.gender}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
 
-                <View
-                  className="flex-row items-center rounded-2xl"
+            {/* Height + Weight row */}
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              {/* Height */}
+              <View style={{ flex: 1 }}>
+                <Text
                   style={{
-                    backgroundColor: "#F5F8FB",
-                    borderWidth: 1,
-                    borderColor: "#D3DEE8",
-                    paddingHorizontal: 14,
-                    height: 52,
+                    color: "#2D3449",
+                    fontSize: 14,
+                    fontFamily: preventionTheme.typography.family.semiBold,
+                    marginBottom: 8,
                   }}
                 >
-                  <MaterialIcons name="height" size={20} color="#90A2B7" />
+                  Height
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: errors.height ? colors.error : "#E2EAF0",
+                    paddingHorizontal: 14,
+                    height: 56,
+                  }}
+                >
+                  <Ionicons
+                    name="swap-vertical-outline"
+                    size={20}
+                    color="#A0B0C0"
+                  />
                   <TextInput
-                    placeholder="Height (ft/in)"
-                    placeholderTextColor="#8A9CB1"
+                    placeholder="170"
+                    placeholderTextColor="#A0B0C0"
                     keyboardType="decimal-pad"
                     value={height}
-                    onChangeText={(value) => {
-                      setHeight(value);
-                      if (errors.height) {
+                    onChangeText={(v) => {
+                      setHeight(v);
+                      if (errors.height)
                         setErrors((prev) => ({ ...prev, height: undefined }));
-                      }
                     }}
                     style={{
                       flex: 1,
-                      marginLeft: 12,
+                      marginLeft: 10,
                       color: "#2D3449",
                       fontSize: 16,
                       fontFamily: preventionTheme.typography.family.body,
                     }}
                   />
-                  <Text
+                  <View
                     style={{
-                      color: "#2F80ED",
-                      fontSize: 16,
-                      fontFamily: preventionTheme.typography.family.medium,
+                      backgroundColor: "#EDF2F7",
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 8,
                     }}
                   >
-                    cm
-                  </Text>
+                    <Text
+                      style={{
+                        color: "#5D7A94",
+                        fontSize: 13,
+                        fontFamily: preventionTheme.typography.family.medium,
+                      }}
+                    >
+                      cm
+                    </Text>
+                  </View>
                 </View>
                 {errors.height ? (
                   <Text
@@ -311,55 +387,75 @@ export default function OnboardingStepThree() {
                       color: colors.error,
                       fontSize: 12,
                       fontFamily: preventionTheme.typography.family.body,
+                      marginTop: 4,
                     }}
                   >
                     {errors.height}
                   </Text>
                 ) : null}
+              </View>
 
-                <View
-                  className="flex-row items-center rounded-2xl"
+              {/* Weight */}
+              <View style={{ flex: 1 }}>
+                <Text
                   style={{
-                    backgroundColor: "#F5F8FB",
-                    borderWidth: 1,
-                    borderColor: "#D3DEE8",
-                    paddingHorizontal: 14,
-                    height: 52,
+                    color: "#2D3449",
+                    fontSize: 14,
+                    fontFamily: preventionTheme.typography.family.semiBold,
+                    marginBottom: 8,
                   }}
                 >
-                  <MaterialIcons
-                    name="monitor-weight"
-                    size={20}
-                    color="#90A2B7"
-                  />
+                  Weight
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: errors.weight ? colors.error : "#E2EAF0",
+                    paddingHorizontal: 14,
+                    height: 56,
+                  }}
+                >
+                  <Ionicons name="cube-outline" size={20} color="#A0B0C0" />
                   <TextInput
-                    placeholder="Weight (lbs)"
-                    placeholderTextColor="#8A9CB1"
+                    placeholder="65"
+                    placeholderTextColor="#A0B0C0"
                     keyboardType="decimal-pad"
                     value={weight}
-                    onChangeText={(value) => {
-                      setWeight(value);
-                      if (errors.weight) {
+                    onChangeText={(v) => {
+                      setWeight(v);
+                      if (errors.weight)
                         setErrors((prev) => ({ ...prev, weight: undefined }));
-                      }
                     }}
                     style={{
                       flex: 1,
-                      marginLeft: 12,
+                      marginLeft: 10,
                       color: "#2D3449",
                       fontSize: 16,
                       fontFamily: preventionTheme.typography.family.body,
                     }}
                   />
-                  <Text
+                  <View
                     style={{
-                      color: "#2F80ED",
-                      fontSize: 16,
-                      fontFamily: preventionTheme.typography.family.medium,
+                      backgroundColor: "#EDF2F7",
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 8,
                     }}
                   >
-                    kg
-                  </Text>
+                    <Text
+                      style={{
+                        color: "#5D7A94",
+                        fontSize: 13,
+                        fontFamily: preventionTheme.typography.family.medium,
+                      }}
+                    >
+                      kg
+                    </Text>
+                  </View>
                 </View>
                 {errors.weight ? (
                   <Text
@@ -367,6 +463,7 @@ export default function OnboardingStepThree() {
                       color: colors.error,
                       fontSize: 12,
                       fontFamily: preventionTheme.typography.family.body,
+                      marginTop: 4,
                     }}
                   >
                     {errors.weight}
@@ -374,127 +471,45 @@ export default function OnboardingStepThree() {
                 ) : null}
               </View>
             </View>
-            {errors.gender ? (
-              <Text
-                className="mt-s"
-                style={{
-                  color: colors.error,
-                  fontSize: 12,
-                  fontFamily: preventionTheme.typography.family.body,
-                }}
-              >
-                {errors.gender}
-              </Text>
-            ) : null}
+          </ScrollView>
 
+          {/* Fixed bottom button */}
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+              paddingBottom: 24,
+              backgroundColor: "#F5F8FB",
+              borderTopWidth: 1,
+              borderTopColor: "#E8EEF4",
+            }}
+          >
             <TouchableOpacity
-              onPress={() => setShowWhyWeAsk(!showWhyWeAsk)}
-              className="mt-m h-12 flex-row items-center justify-center rounded-2xl"
+              onPress={handleContinue}
               activeOpacity={0.85}
-              style={{ backgroundColor: "#DCE8EF" }}
+              style={{
+                height: 56,
+                backgroundColor: colors.primary,
+                borderRadius: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
             >
               <Text
                 style={{
-                  color: "#2F80ED",
-                  fontSize: 16,
+                  color: "#FFFFFF",
+                  fontSize: 18,
                   fontFamily: preventionTheme.typography.family.medium,
                 }}
               >
-                Why we ask
+                Save & Continue
               </Text>
-              <MaterialIcons
-                name={
-                  showWhyWeAsk ? "keyboard-arrow-up" : "keyboard-arrow-down"
-                }
-                size={20}
-                color="#2F80ED"
-                style={{ marginLeft: 4 }}
-              />
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
-
-            {showWhyWeAsk && (
-              <View
-                className="mt-m rounded-2xl"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderWidth: 1,
-                  borderColor: "#D8E4EC",
-                  overflow: "hidden",
-                }}
-              >
-                {WHY_WE_ASK_ITEMS.map((item, index) => (
-                  <View
-                    key={index}
-                    style={{
-                      borderBottomWidth:
-                        index < WHY_WE_ASK_ITEMS.length - 1 ? 1 : 0,
-                      borderBottomColor: "#E8EEF4",
-                    }}
-                  >
-                    <View style={{ padding: 14 }}>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 6,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 4,
-                            height: 16,
-                            backgroundColor: colors.primary,
-                            borderRadius: 2,
-                            marginRight: 10,
-                          }}
-                        />
-                        <Text
-                          style={{
-                            color: "#2D3449",
-                            fontSize: 15,
-                            fontFamily:
-                              preventionTheme.typography.family.semiBold,
-                          }}
-                        >
-                          {item.field}
-                        </Text>
-                      </View>
-                      <Text
-                        style={{
-                          color: "#60718A",
-                          fontSize: 13,
-                          lineHeight: 20,
-                          fontFamily: preventionTheme.typography.family.body,
-                          marginLeft: 14,
-                        }}
-                      >
-                        {item.reason}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <View className="mt-l">
-              <TouchableOpacity
-                onPress={handleContinue}
-                className="h-14 items-center justify-center rounded-button"
-                style={{ backgroundColor: colors.primary }}
-              >
-                <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontSize: 18,
-                    fontFamily: preventionTheme.typography.family.medium,
-                  }}
-                >
-                  Save & Continue
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </ScrollView>
+        </View>
 
         <Modal
           visible={showGenderModal}
@@ -563,7 +578,7 @@ export default function OnboardingStepThree() {
                         borderColor:
                           gender === option.id ? colors.primary : "#D3DEE8",
                         paddingHorizontal: 16,
-                        paddingVertical: 0,
+                        paddingVertical: 12,
                       }}
                     >
                       <MaterialIcons

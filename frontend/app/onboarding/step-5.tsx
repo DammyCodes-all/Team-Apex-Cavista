@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import {
   View,
 } from "react-native";
 
-import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
 import { useAuth } from "@/contexts/auth-context";
@@ -19,8 +19,8 @@ import { updateProfile } from "@/lib/api/profile";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 
 interface SetupItem {
-  icon: string;
   label: string;
+  suffix?: string;
 }
 
 interface TimelineItem {
@@ -30,75 +30,45 @@ interface TimelineItem {
 }
 
 const SETUP_ITEMS: SetupItem[] = [
-  {
-    icon: "data-usage",
-    label: "4 data sources connected",
-  },
-  {
-    icon: "person",
-    label: "Health profile created",
-  },
-  {
-    icon: "target",
-    label: "Personal goals selected",
-  },
-  {
-    icon: "lock",
-    label: "Privacy preferences saved",
-  },
+  { label: "4 data sources connected (📞, 📱, 📍)" },
+  { label: "Health profile created" },
+  { label: "Personal goals selected" },
+  { label: "Privacy preferences saved 🔒" },
 ];
 
 const TIMELINE_ITEMS: TimelineItem[] = [
   {
-    dayRange: "1–3",
+    dayRange: "1-3",
     title: "AI learns your patterns",
     description: "No action needed, just live normally",
   },
   {
-    dayRange: "4–7",
+    dayRange: "4-7",
     title: "First insights arrive",
     description: "You'll start seeing personalized recommendations",
   },
   {
     dayRange: "7+",
     title: "Full personalization",
-    description: "Experience AI tailored to your unique health profile",
+    description: "Recommendations become more personalized and actionable",
   },
 ];
 
-function SetupItemCard({ item }: { item: SetupItem }) {
+function SetupItemRow({ item }: { item: SetupItem }) {
   return (
     <View
-      className="flex-row items-center rounded-2xl"
       style={{
-        backgroundColor: "#FFFFFF",
-        borderWidth: 1,
-        borderColor: "#D8E4EC",
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        marginBottom: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 10,
       }}
     >
-      <View
-        className="items-center justify-center rounded-full"
-        style={{
-          backgroundColor: "#E8F4F9",
-          width: 40,
-          height: 40,
-        }}
-      >
-        <MaterialIcons
-          name="check-circle"
-          size={20}
-          color={preventionTheme.colors.light.primary}
-        />
-      </View>
-
+      <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
       <Text
         style={{
           marginLeft: 12,
           color: "#2D3449",
-          fontSize: 16,
+          fontSize: 15,
           fontFamily: preventionTheme.typography.family.medium,
           flex: 1,
         }}
@@ -109,61 +79,75 @@ function SetupItemCard({ item }: { item: SetupItem }) {
   );
 }
 
-function TimelineItemCard({ item }: { item: TimelineItem }) {
+function TimelineSection() {
+  const colors = preventionTheme.colors.light;
+
   return (
-    <View
-      className="flex-row rounded-2xl"
-      style={{
-        backgroundColor: "#FFFFFF",
-        borderWidth: 1,
-        borderColor: "#D8E4EC",
-        padding: 14,
-        marginBottom: 12,
-      }}
-    >
-      <View
-        className="items-center justify-center rounded-full"
-        style={{
-          backgroundColor: preventionTheme.colors.light.primary,
-          width: 48,
-          height: 48,
-          minWidth: 48,
-        }}
-      >
-        <Text
-          style={{
-            color: "#FFFFFF",
-            fontSize: 14,
-            fontFamily: preventionTheme.typography.family.bold,
-          }}
-        >
-          {item.dayRange}
-        </Text>
-      </View>
+    <View style={{ paddingTop: 4 }}>
+      {TIMELINE_ITEMS.map((item, index) => (
+        <View key={index} style={{ flexDirection: "row", minHeight: 80 }}>
+          {/* Left column: circle + connector line */}
+          <View style={{ alignItems: "center", width: 48 }}>
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: colors.primary,
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 13,
+                  fontFamily: preventionTheme.typography.family.bold,
+                }}
+              >
+                {item.dayRange}
+              </Text>
+            </View>
+            {index < TIMELINE_ITEMS.length - 1 && (
+              <View
+                style={{
+                  width: 3,
+                  flex: 1,
+                  backgroundColor: colors.primary,
+                  borderRadius: 2,
+                  marginVertical: -2,
+                }}
+              />
+            )}
+          </View>
 
-      <View style={{ flex: 1, marginLeft: 14 }}>
-        <Text
-          style={{
-            color: "#2D3449",
-            fontSize: 16,
-            fontFamily: preventionTheme.typography.family.semiBold,
-            marginBottom: 4,
-          }}
-        >
-          {item.title}
-        </Text>
-
-        <Text
-          style={{
-            color: "#60718A",
-            fontSize: 14,
-            fontFamily: preventionTheme.typography.family.body,
-            lineHeight: 22,
-          }}
-        >
-          {item.description}
-        </Text>
-      </View>
+          {/* Right column: text */}
+          <View style={{ flex: 1, marginLeft: 14, paddingBottom: 18 }}>
+            <Text
+              style={{
+                color: "#2D3449",
+                fontSize: 16,
+                fontFamily: preventionTheme.typography.family.semiBold,
+                marginBottom: 3,
+                marginTop: 2,
+              }}
+            >
+              {item.title}
+            </Text>
+            <Text
+              style={{
+                color: "#7A8DA0",
+                fontSize: 14,
+                fontFamily: preventionTheme.typography.family.body,
+                lineHeight: 20,
+              }}
+            >
+              {item.description}
+            </Text>
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
@@ -230,7 +214,7 @@ export default function OnboardingStepFive() {
 
   if (isSubmitting) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
         <OnboardingSwipeView step={5} totalSteps={5}>
           <View
             style={{
@@ -260,7 +244,7 @@ export default function OnboardingStepFive() {
 
   if (submitError) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
         <OnboardingSwipeView step={5} totalSteps={5}>
           <View
             style={{
@@ -305,128 +289,129 @@ export default function OnboardingStepFive() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#C9DCE8" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
       <OnboardingSwipeView step={5} totalSteps={5}>
-        <ScrollView
-          className="flex-1 px-4"
-          contentContainerStyle={{
-            paddingTop: 20,
-            paddingBottom: 40,
-            backgroundColor: "#C9DCE8",
-          }}
-        >
-          <View className="items-center pt-l">
-            <OnboardingStepDots
-              step={5}
-              totalSteps={5}
-              labelColor="#5C6875"
-              labelFontSize={16}
-              labelFontFamily={preventionTheme.typography.family.medium}
-              activeColor={colors.primary}
-              inactiveColor="#90A5B5"
-              activeSize={16}
-              inactiveSize={8}
-              gap={10}
-            />
-          </View>
+        <View style={{ flex: 1, backgroundColor: "#F5F8FB" }}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 40,
+              paddingBottom: 120,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Checkmark hero */}
+            <View style={{ alignItems: "center", marginBottom: 24 }}>
+              <View
+                style={{
+                  width: 90,
+                  height: 90,
+                  borderRadius: 45,
+                  backgroundColor: colors.primary,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 20,
+                }}
+              >
+                <Ionicons name="checkmark" size={48} color="#FFFFFF" />
+              </View>
 
-          <View className="mt-xl items-center">
-            <View
-              className="items-center justify-center rounded-full mb-l"
-              style={{
-                width: 100,
-                height: 100,
-                backgroundColor: colors.primary,
-              }}
-            >
-              <MaterialIcons name="check" size={52} color="#FFFFFF" />
+              <Text
+                style={{
+                  color: "#2D3449",
+                  fontSize: 32,
+                  lineHeight: 40,
+                  fontFamily: preventionTheme.typography.family.bold,
+                  textAlign: "center",
+                  marginBottom: 8,
+                }}
+              >
+                You're All Set!
+              </Text>
+              <Text
+                style={{
+                  color: "#7A8DA0",
+                  fontSize: 15,
+                  lineHeight: 22,
+                  fontFamily: preventionTheme.typography.family.body,
+                  textAlign: "center",
+                  maxWidth: 300,
+                }}
+              >
+                Your AI health partner is ready to start{"\n"}learning about
+                you.
+              </Text>
             </View>
 
-            <Text
+            {/* Setup summary card */}
+            <View
               style={{
-                color: "#2D3449",
-                fontSize: 46 / 2,
-                lineHeight: 54 / 2,
-                fontFamily: preventionTheme.typography.family.bold,
-                textAlign: "center",
+                backgroundColor: "#F0F4F7",
+                borderRadius: 20,
+                padding: 20,
+                marginBottom: 16,
               }}
             >
-              You&apos;re All Set!
-            </Text>
+              <Text
+                style={{
+                  color: "#2D3449",
+                  fontSize: 18,
+                  fontFamily: preventionTheme.typography.family.bold,
+                  marginBottom: 8,
+                }}
+              >
+                Here's what we've set up
+              </Text>
+              {SETUP_ITEMS.map((item, index) => (
+                <SetupItemRow key={index} item={item} />
+              ))}
+            </View>
 
-            <Text
-              className="mt-s text-center px-l"
+            {/* Timeline card */}
+            <View
               style={{
-                color: "#4E6177",
-                fontSize: 16,
-                lineHeight: 26,
-                fontFamily: preventionTheme.typography.family.body,
+                backgroundColor: "#F0F4F7",
+                borderRadius: 20,
+                padding: 20,
               }}
             >
-              Your AI health partner is ready to start learning about you
-            </Text>
-          </View>
+              <Text
+                style={{
+                  color: "#2D3449",
+                  fontSize: 18,
+                  fontFamily: preventionTheme.typography.family.bold,
+                  marginBottom: 12,
+                }}
+              >
+                Your First 7 Days
+              </Text>
+              <TimelineSection />
+            </View>
+          </ScrollView>
 
+          {/* Fixed bottom button */}
           <View
-            className="mt-l rounded-3xl"
             style={{
-              backgroundColor: "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#D8E4EC",
-              padding: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+              paddingBottom: 24,
+              backgroundColor: "#F5F8FB",
             }}
           >
-            <Text
-              style={{
-                color: "#2D3449",
-                fontSize: 18,
-                fontFamily: preventionTheme.typography.family.bold,
-                marginBottom: 14,
-              }}
-            >
-              Here&apos;s what we&apos;ve set up
-            </Text>
-
-            {SETUP_ITEMS.map((item, index) => (
-              <SetupItemCard key={index} item={item} />
-            ))}
-          </View>
-
-          <View
-            className="mt-l rounded-3xl"
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#D8E4EC",
-              padding: 16,
-            }}
-          >
-            <Text
-              style={{
-                color: "#2D3449",
-                fontSize: 18,
-                fontFamily: preventionTheme.typography.family.bold,
-                marginBottom: 14,
-              }}
-            >
-              Your First 7 Days
-            </Text>
-
-            {TIMELINE_ITEMS.map((item, index) => (
-              <TimelineItemCard key={index} item={item} />
-            ))}
-          </View>
-
-          <View className="mt-l pt-l">
             <TouchableOpacity
               onPress={() => {
                 if (isSaved) {
                   router.replace("/");
                 }
               }}
-              className="h-14 flex-row items-center justify-center rounded-button"
+              activeOpacity={0.85}
               style={{
+                height: 56,
                 backgroundColor: colors.primary,
+                borderRadius: 28,
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
               <Text
@@ -436,11 +421,11 @@ export default function OnboardingStepFive() {
                   fontFamily: preventionTheme.typography.family.medium,
                 }}
               >
-                Start Using Prevention
+                Go to Dashboard
               </Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </OnboardingSwipeView>
     </SafeAreaView>
   );
