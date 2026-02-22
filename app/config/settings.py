@@ -19,10 +19,13 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
 
     # AI / LLM Keys
-    OPENAI_API_KEY: str = ""
+    # only OpenRouter is supported now; if you need another provider adapt the
+    # chat_service accordingly.
     OPENROUTER_API_KEY: str = ""
-    # option: "openai" or "openrouter" (auto-detect if key present)
-    LLM_PROVIDER: str = "openai"
+    OPENROUTER_MODEL: str = "openrouter-gpt4o-mini"  # default OpenRouter model
+
+    # LLM_PROVIDER left for backward compatibility; keep at "openrouter"
+    LLM_PROVIDER: str = "openrouter"
 
     # Runtime flags
     ENV: str = "development"

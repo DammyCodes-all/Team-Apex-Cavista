@@ -37,6 +37,7 @@ Enable or configure AI using the `.env` keys:
 
 - `ENABLE_AI_INSIGHTS` (true/false)
 - `AI_MODEL_PATH` / `AI_MODEL_NAME` — path to model or identifier
+- `OPENROUTER_MODEL` — chat model identifier used by OpenRouter (e.g. `openrouter-gpt4o-mini` or `deepseek/deepseek-chat-v3-0324:free`).
 - `AI_MODEL_TYPE` — `baseline`, `risk`, or `prediction`
 - `AI_REFRESH_INTERVAL_HOURS` — how often to refresh/retrain
 - `DEVIATION_THRESHOLD` — z-score or percent threshold used for alerting

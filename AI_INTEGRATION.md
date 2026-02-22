@@ -99,6 +99,7 @@ Example insight (JSON):
 - `DEVIATION_THRESHOLD` — numeric threshold
 - `MAX_HISTORY_DAYS` — retention window
 - `USE_SYNTHETIC_DATA` / `SIMULATION_MODE` — testing flags
+- `OPENROUTER_MODEL` — chat model name sent to OpenRouter (e.g. `deepseek/deepseek-chat-v3-0324:free`).
 
 10. Testing & Validation
 ------------------------
