@@ -1,5 +1,6 @@
 import asyncio
 import random
+import logging
 from datetime import datetime, timedelta, date
 from typing import Dict
 
@@ -19,9 +20,11 @@ async def start_simulation(db, user_id: str):
     request path.
     """
 
+    logging.info(f"simulation task started for {user_id}")
     # initial state
     state = _sim_state.setdefault(user_id, {
         "last_date": date.today(),
+        "sim_date": date.today() - timedelta(days=14),  # start 14 days in past
         "steps": random.randint(1000, 5000),
         "sedentary": 8 * 60,
         "active": 0,
@@ -60,8 +63,10 @@ async def start_simulation(db, user_id: str):
                 state["screen"] += random.randint(0, 2)
 
             # build metrics payload
+            # choose a date for the metric; advance simulation date until real today
+            sim_date = state.get("sim_date", now.date())
             payload = MetricsCreate(
-                date=now.date(),
+                date=sim_date,
                 steps=state["steps"],
                 sleep_duration_minutes=state.get("sleep", 0),
                 sedentary_minutes=state["sedentary"],
@@ -69,6 +74,9 @@ async def start_simulation(db, user_id: str):
                 active_minutes=state["active"],
                 screen_time_minutes=state["screen"],
             )
+            # increment sim_date by one day, but not beyond today
+            if sim_date < now.date():
+                state["sim_date"] = sim_date + timedelta(days=1)
 
             # ingest via service
             await ingest_metrics(db, user_id, payload)
@@ -78,6 +86,6 @@ async def start_simulation(db, user_id: str):
             await manager.send_dashboard_update(user_id, dash)
 
             await asyncio.sleep(5)
-        except Exception:
-            # log someday; for now ignore and continue
+        except Exception as exc:
+            logging.error(f"simulation error for {user_id}: {exc}")
             await asyncio.sleep(5)

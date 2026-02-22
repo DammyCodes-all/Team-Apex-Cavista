@@ -14,5 +14,8 @@ async def chat_endpoint(payload: ChatRequest, current_user=Depends(get_current_u
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user")
 
     # call service
-    reply = await chat_with_user(user_id, [m.model_dump() for m in payload.messages])
-    return reply
+    try:
+        reply = await chat_with_user(user_id, [m.model_dump() for m in payload.messages])
+        return reply
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Chat service error: {exc}")

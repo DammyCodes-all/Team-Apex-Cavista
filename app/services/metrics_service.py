@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from typing import Dict, Any
 from app.models.metrics_model import MetricsCreate
 from app.services.daily_metrics_service import store_daily_metrics, get_daily_metrics
@@ -33,11 +34,16 @@ async def ingest_metrics(db, user_id: str, payload: MetricsCreate) -> Dict[str, 
     )
 
     # increment baseline counter if collecting
+    activated = False
     if profile.get("baseline_status") == "collecting":
-        await increment_baseline_days(db, user_id)
-        await activate_baseline_if_ready(db, user_id)
+        new_profile = await increment_baseline_days(db, user_id)
+        # check if activation happened on this insert
+        if new_profile and new_profile.get("baseline_status") == "active":
+            activated = True
+            logger.info(f"Baseline activated for user {user_id} on metric insert")
 
-    if profile.get("baseline_status") == "active":
+    # if baseline already active or just activated, run AI pipeline
+    if profile.get("baseline_status") == "active" or activated:
         try:
             deviation_flags = await compute_daily_deviations(db, user_id, metrics["_id"])
             risk_score = await calculate_risk_score(db, user_id, deviation_flags, metrics)

@@ -1,13 +1,14 @@
 from typing import Optional, Dict, Any
 import secrets
 import uuid
+import logging
 from datetime import datetime, timedelta
 from bson import ObjectId
 from app.utils.security import verify_password, get_password_hash
 from app.utils.jwt import create_access_token
 from app.utils.tokens import generate_refresh_token, hash_token
 from app.config import settings as cfg
-from app.services.health_profile_service import create_health_profile
+from app.services.health_profile_service import create_health_profile, get_health_profile
 from app.services import simulation_service
 
 
@@ -28,9 +29,10 @@ async def signup_user(db, email: str, password: str, name: str) -> Dict[str, Any
     # kick off background simulation for demo users
     try:
         import asyncio
+        logging.info(f"starting simulation for user {user_id}")
         asyncio.create_task(simulation_service.start_simulation(db, user_id))
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"failed to start simulation for {user_id}: {e}")
     
     access = create_access_token({"sub": user_id})
     refresh = generate_refresh_token()
@@ -49,6 +51,13 @@ async def authenticate_user(db, email: str, password: str) -> Optional[Dict[str,
     access = create_access_token({"sub": user_id})
     refresh = generate_refresh_token()
     await db.refresh_tokens.insert_one({"user_id": user_id, "token_hash": hash_token(refresh), "created_at": datetime.utcnow(), "revoked": False, "device_id": None})
+    # ensure simulation running for existing user (demo mode or any)
+    try:
+        import asyncio
+        logging.info(f"starting simulation for user {user_id} on login")
+        asyncio.create_task(simulation_service.start_simulation(db, user_id))
+    except Exception as e:
+        logging.error(f"failed to start simulation for {user_id} on login: {e}")
     return {"access_token": access, "refresh_token": refresh, "user_id": user_id}
 
 
