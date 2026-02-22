@@ -5,6 +5,7 @@ from app.routers import router
 from app.core.database import connect_to_mongo, close_mongo
 from app.middleware.csrf import csrf_protect
 from app.middleware.refresh_middleware import RefreshTokenMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 
 def create_app() -> FastAPI:
@@ -24,6 +25,14 @@ def create_app() -> FastAPI:
     app.middleware("http")(csrf_protect)
     # register refresh-token middleware (must run after csrf but before deps)
     app.add_middleware(RefreshTokenMiddleware)
+    # allow cross-origin requests with credentials (cookies) if frontend is served separately
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"] if settings.DEBUG else [],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     return app
 
 
