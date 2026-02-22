@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 async def ingest_metrics(db, user_id: str, payload: MetricsCreate) -> Dict[str, Any]:
     """Store incoming metrics and run AI pipeline if baseline is active."""
+    logging.info(f"ingest_metrics: user={user_id}, payload={payload}")
     profile = await get_health_profile(db, user_id)
+    logging.info(f"ingest_metrics: current profile status={profile.get('baseline_status') if profile else None}")
     if not profile:
         return {}
 
