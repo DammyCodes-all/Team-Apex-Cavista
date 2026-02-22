@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.routers import router
 from app.core.database import connect_to_mongo, close_mongo
 from app.middleware.csrf import csrf_protect
+from app.middleware.refresh_middleware import RefreshTokenMiddleware
 
 
 def create_app() -> FastAPI:
@@ -19,7 +20,10 @@ def create_app() -> FastAPI:
     app.add_event_handler("startup", _startup)
     app.add_event_handler("shutdown", _shutdown)
     # register csrf middleware
+    # register csrf middleware
     app.middleware("http")(csrf_protect)
+    # register refresh-token middleware (must run after csrf but before deps)
+    app.add_middleware(RefreshTokenMiddleware)
     return app
 
 
