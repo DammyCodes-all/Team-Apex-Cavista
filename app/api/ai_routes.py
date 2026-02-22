@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+import logging
 from datetime import date
 from app.deps import get_current_user
 from app.db.client import get_database
@@ -27,7 +28,9 @@ async def ai_insights(
             detail=f"AI engine still collecting baseline data. {14 - profile.get('baseline_days_collected', 0)} days remaining."
         )
 
+    logging.info(f"ai_insights called for user {user_id}, days={days}")
     insights = await get_latest_insights(db, user_id, days)
+    logging.info(f"ai_insights returned {len(insights)} entries")
     return insights or []
 
 

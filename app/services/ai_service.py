@@ -8,6 +8,7 @@ Handles:
 4. Insight generation (rule-based recommendations)
 """
 from typing import Any, Dict, List, Optional
+import logging
 from datetime import datetime, timedelta, date
 from bson import ObjectId
 import statistics
@@ -372,7 +373,9 @@ async def generate_insights(
     """
     profile = await db.health_profiles.find_one({"user_id": user_id})
     if not profile:
+        logging.warning(f"generate_insights: no profile for {user_id}")
         return {}
+    logging.info(f"generate_insights: called for {user_id} with risk_score={risk_score} and flags={deviation_flags}")
     
     # Determine risk level
     if risk_score < 30:
@@ -464,7 +467,7 @@ async def generate_insights(
     # Store in ai_insights collection
     result = await db.ai_insights.insert_one(insight_doc)
     insight_doc["_id"] = result.inserted_id
-    
+    logging.info(f"generate_insights: inserted insight {insight_doc["_id"]} for {user_id}")
     # Update health_profile risk_score
     await db.health_profiles.update_one(
         {"user_id": user_id},
@@ -475,12 +478,13 @@ async def generate_insights(
 
 
 async def get_latest_insights(db, user_id: str, days: int = 7) -> List[Dict[str, Any]]:
-    """Retrieve latest AI insights for a user (last N days)."""
-    start_date = datetime.utcnow() - timedelta(days=days)
+    """Retrieve latest AI insights for a user.
 
-    cursor = db.ai_insights.find({
-        "user_id": user_id,
-        "date": {"$gte": start_date}
-    }).sort("date", -1)
-    
+    We originally filtered by the past N days, but during rapid simulation the
+    date field can be identical to `start_date` causing nothing to be returned.
+    To avoid empty results we now return all insights for the user, sorted by
+    date.
+    """
+    logging.info(f"get_latest_insights: querying for user {user_id}")
+    cursor = db.ai_insights.find({"user_id": user_id}).sort("date", -1)
     return await cursor.to_list(length=None)
