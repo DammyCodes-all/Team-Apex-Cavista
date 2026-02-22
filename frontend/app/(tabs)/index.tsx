@@ -1,98 +1,312 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useMemo } from "react";
+import { ScrollView, View, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { preventionTheme } from "@/constants/tokens";
+import { useMetrics } from "@/hooks/use-metrics";
+import {
+  Header,
+  DailyInsightCard,
+  MetricsGrid,
+  WeeklyGoals,
+  MetricsGridSkeleton,
+  DailyInsightSkeleton,
+  WeeklyGoalsSkeleton,
+} from "@/components/home";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const colors = preventionTheme.colors.light;
+const typo = preventionTheme.typography;
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+// Get today's date in YYYY-MM-DD format
+function getTodayDateString(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+interface ActivityBar {
+  h: number;
+  active: boolean;
+}
+
+interface GoalItem {
+  label: string;
+  current: number;
+  target: number;
+  unit: string;
+  color: string;
+}
+
+function minutesToHoursAndMinutes(minutes: number): {
+  hours: number;
+  minutes: number;
+} {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return { hours, minutes: mins };
+}
+
+// Generate activity bars from sedentary and active minutes
+function generateActivityBars(
+  sedentaryMinutes: number,
+  activeMinutes: number,
+): ActivityBar[] {
+  const bars: ActivityBar[] = [];
+
+  // Create 7 bars representing the day roughly
+  for (let i = 0; i < 7; i++) {
+    const segmentActive = i * 2 <= Math.floor(activeMinutes) / 60;
+    bars.push({
+      h: Math.random() * 100,
+      active: segmentActive,
+    });
+  }
+  return bars;
+}
+
+// Main Screen
+export default function HomeScreen() {
+  const router = useRouter();
+  const today = useMemo(() => getTodayDateString(), []);
+  const { data: metricsData, loading, error } = useMetrics(today);
+
+  // Transform API data to UI format
+  const { stepsData, sleepData, screenTimeData, activityBars, goals, insight } =
+    useMemo(() => {
+      if (!metricsData) {
+        // Default values while loading
+        return {
+          stepsData: { count: 0, trend: 0, sparkline: Array(12).fill(0) },
+          sleepData: { hours: 0, minutes: 0, quality: "Fair" as const },
+          screenTimeData: { hours: 0, minutes: 0, status: "Moderate" as const },
+          activityBars: Array(7).fill({ h: 0, active: false }),
+          goals: [] as GoalItem[],
+          insight: {
+            beforeHighlight: "Loading your daily insights...",
+            highlight: "",
+            afterHighlight: "",
+            isNew: false,
+          },
+        };
+      }
+
+      const sleep = minutesToHoursAndMinutes(
+        metricsData.sleep_duration_minutes,
+      );
+      const screenTime = minutesToHoursAndMinutes(
+        metricsData.screen_time_minutes,
+      );
+
+      // Classify sleep quality based on hours
+      const sleepQuality: "Excellent" | "Good" | "Fair" | "Poor" =
+        sleep.hours >= 7
+          ? "Excellent"
+          : sleep.hours >= 6
+            ? "Good"
+            : sleep.hours >= 5
+              ? "Fair"
+              : "Poor";
+
+      // Classify screen time status based on hours
+      const screenStatus: "Low" | "Moderate" | "High Usage" =
+        screenTime.hours < 3
+          ? "Low"
+          : screenTime.hours < 5
+            ? "Moderate"
+            : "High Usage";
+
+      // Generate sparkline (mock for now - could be from weekly data)
+      const sparkline = Array.from(
+        { length: 12 },
+        () => Math.floor(Math.random() * 100) + metricsData.steps / 100,
+      );
+
+      return {
+        stepsData: {
+          count: metricsData.steps,
+          trend: metricsData.risk_score > 50 ? -10 : 12, // Mock trend
+          sparkline,
+        },
+        sleepData: {
+          hours: sleep.hours,
+          minutes: sleep.minutes,
+          quality: sleepQuality,
+        },
+        screenTimeData: {
+          hours: screenTime.hours,
+          minutes: screenTime.minutes,
+          status: screenStatus,
+        },
+        activityBars: generateActivityBars(
+          metricsData.sedentary_minutes,
+          metricsData.active_minutes,
+        ),
+        goals: [
+          {
+            label: "Active Minutes",
+            current: metricsData.active_minutes,
+            target: 150,
+            unit: "mins",
+            color: colors.primary,
+          },
+          {
+            label: "Location Diversity",
+            current: Math.round(metricsData.location_diversity_score * 10),
+            target: 10,
+            unit: "score",
+            color: "#7C3AED",
+          },
+        ] as GoalItem[],
+        insight: {
+          beforeHighlight: "Your risk score is ",
+          highlight: `${metricsData.risk_score}/100`,
+          afterHighlight:
+            metricsData.risk_score < 30
+              ? ". Great job maintaining healthy habits!"
+              : ". Consider increasing activity and improving sleep quality.",
+          isNew: true,
+        },
+      };
+    }, [metricsData]);
+
+  const renderDailyInsight = () => {
+    if (loading) return <DailyInsightSkeleton />;
+    if (error || !metricsData) {
+      return (
+        <DailyInsightCard
+          insight={{
+            beforeHighlight: "Welcome! ",
+            highlight: "Track your health",
+            afterHighlight: " to reduce diabetes risk.",
+            isNew: false,
+          }}
+        />
+      );
+    }
+    return <DailyInsightCard insight={insight} />;
+  };
+
+  const renderMetricsGrid = () => {
+    if (loading) return <MetricsGridSkeleton />;
+    if (error || !metricsData) {
+      // Fallback: Show zero metrics with message
+      return (
+        <MetricsGrid
+          steps={{ count: 0, trend: 0, sparkline: Array(12).fill(0) }}
+          sleep={{ hours: 0, minutes: 0, quality: "Fair" }}
+          screenTime={{ hours: 0, minutes: 0, status: "Moderate" }}
+          activityBars={Array(7).fill({ h: 30, active: false })}
+        />
+      );
+    }
+    return (
+      <MetricsGrid
+        steps={stepsData}
+        sleep={sleepData}
+        screenTime={screenTimeData}
+        activityBars={activityBars}
+      />
+    );
+  };
+
+  const renderWeeklyGoals = () => {
+    if (loading) return <WeeklyGoalsSkeleton />;
+    if (error || !metricsData) {
+      // Fallback: Show placeholder goals
+      return (
+        <WeeklyGoals
+          goals={[
+            {
+              label: "Active Minutes",
+              current: 0,
+              target: 150,
+              unit: "mins",
+              color: colors.primary,
+            },
+            {
+              label: "Location Diversity",
+              current: 0,
+              target: 10,
+              unit: "score",
+              color: "#7C3AED",
+            },
+          ]}
+        />
+      );
+    }
+    return <WeeklyGoals goals={goals} />;
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Header />
+
+        {/* Show error banner if there's an error */}
+        {error && (
+          <View
+            style={{
+              backgroundColor: colors.error + "15",
+              padding: 12,
+              borderRadius: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Ionicons
+              name="alert-circle-outline"
+              size={20}
+              color={colors.error}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              style={{
+                fontFamily: typo.family.body,
+                fontSize: typo.size.caption,
+                color: colors.error,
+                flex: 1,
+              }}
+            >
+              Unable to load latest metrics. Showing fallback data.
+            </Text>
+          </View>
+        )}
+
+        {renderDailyInsight()}
+        {renderMetricsGrid()}
+        {renderWeeklyGoals()}
+      </ScrollView>
+
+      {/* AI Chat FAB */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => router.push("/(tabs)/aiPage")}
+        style={{
+          position: "absolute",
+          bottom: 90,
+          right: 20,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: colors.primary,
+          justifyContent: "center",
+          alignItems: "center",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 6,
+        }}
+      >
+        <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+}
