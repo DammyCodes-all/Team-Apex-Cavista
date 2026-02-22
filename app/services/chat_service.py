@@ -10,7 +10,7 @@ from app.config.settings import settings
 import openai
 
 # initialize the client once
-openai.api_key = settings.OPENAI_API_KEY
+openai.api_key = getattr(settings, "OPENAI_API_KEY", "")
 
 
 def build_system_prompt() -> str:
