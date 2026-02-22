@@ -30,7 +30,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # -----------------------------
 def _cookie_args() -> dict:
     secure = settings.ENV != "development"
-    return {"httponly": True, "secure": secure, "samesite": "strict", "path": "/"}
+    # use "None" for cross-site cookies; required when frontend runs on a different
+    # origin/domain. browsers require Secure when SameSite=None.
+    return {"httponly": True, "secure": secure, "samesite": "none", "path": "/"}
 
 
 # -----------------------------

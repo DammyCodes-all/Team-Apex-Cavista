@@ -12,7 +12,8 @@ import secrets
 
 def _cookie_args():
     secure = settings.ENV != "development"
-    return {"httponly": True, "secure": secure, "samesite": "strict", "path": "/"}
+    # SameSite=None required for cross-site requests; must also set Secure
+    return {"httponly": True, "secure": secure, "samesite": "none", "path": "/"}
 
 
 class RefreshTokenMiddleware(BaseHTTPMiddleware):
