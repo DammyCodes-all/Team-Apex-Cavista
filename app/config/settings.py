@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # (text-generation-webui, llama.cpp server, etc.). Example:
     # LOCAL_LLM_URL: str = "http://localhost:8001/v1/chat/completions"
     LOCAL_LLM_URL: str = ""
+    GEMINI_API_KEY: str = ""  # Google Gemini API key, optional
+    # model identifier for Gemini; can be overridden via environment
+    GEMINI_MODEL: str = "gemini-1.0"  # update to a valid model name
 
     # Runtime flags
     ENV: str = "development"

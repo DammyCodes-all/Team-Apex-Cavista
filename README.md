@@ -41,11 +41,41 @@ Enable or configure AI using the `.env` keys:
 - `LOCAL_LLM_URL` *(optional)* — if set, the service will POST chat requests to a
   local inference server (e.g. text-generation-webui, llama.cpp HTTP API) instead
   of OpenRouter. Example: `http://localhost:8001/v1/chat/completions`.
+- `GEMINI_MODEL` *(optional)* — when using Google Gemini (set `GEMINI_API_KEY`), you
+  can override the default model name (e.g. `gemini-1.0` or `gemini-1.5`) to match
+  your account's available models.
 - `AI_MODEL_TYPE` — `baseline`, `risk`, or `prediction`
 - `AI_REFRESH_INTERVAL_HOURS` — how often to refresh/retrain
 - `DEVIATION_THRESHOLD` — z-score or percent threshold used for alerting
 - `MAX_HISTORY_DAYS` — max days of historical data to consider
 - `USE_SYNTHETIC_DATA` / `SIMULATION_MODE` — for testing and debug runs
+
+### Dashboard
+
+A lightweight dashboard API aggregates recent metrics, profile goals,
+and the latest AI insight.  Use `GET /dashboard` for a one-off snapshot,
+or open a websocket to `/dashboard/ws?token=<access>` to receive live pushes.
+The payload always contains `steps` plus additional fields:
+`sleep` (hours/minutes string), `screenTime` (minutes), `activityBars` (array
+of recent active minutes), `goals` (object of chosen goals), `risk_score` (0‑100
+value), and `insight` (object with `summary`, `actions`, `risk_score`).
+If you later want to show not only steps but sleep hours, goal status, AI
+insight summary, etc., simply read more fields from the same payload—they’re
+all included by `get_dashboard_data`.
+
+Websocket example:
+
+```js
+const ws = new WebSocket(`wss://your.api/dashboard/ws?token=${token}`);
+ws.onmessage = e => {
+  const data = JSON.parse(e.data);
+  renderSteps(data.steps);
+  // render other fields as desired
+};
+```
+
+The server sends a new snapshot whenever metrics or insights change; clients
+should always update the view on each message.
 
 Privacy Notes
 -------------

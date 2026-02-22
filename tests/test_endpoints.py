@@ -96,3 +96,29 @@ async def test_metrics_and_dashboard_endpoints(monkeypatch):
         assert "userName" in data
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_with_gemini_error(monkeypatch):
+    """When a Gemini model is configured but fails, the route returns 500."""
+    # set up fake user and db
+    async def _cu():
+        return {"user_id": "fake-user-id", "email": "test@example.com"}
+    app.dependency_overrides[deps.get_current_user] = _cu
+    app.dependency_overrides[deps.get_database] = lambda request=None: fake_get_db()
+
+    from app.config import settings
+    settings.GEMINI_API_KEY = "dummy"
+    settings.GEMINI_MODEL = "invalid-model"
+
+    from app.services import gemini_service
+    # simulate underlying client error
+    monkeypatch.setattr(gemini_service, "ask_gemini", lambda msg: (_ for _ in ()).throw(Exception("404 model not found")))
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        resp = await ac.post("/ai/chat", json={"messages": [{"role": "user", "content": "Hello"}]})
+        assert resp.status_code == 500
+        data = resp.json()
+        assert data.get("error_type") == "service_error"
+
+    app.dependency_overrides.clear()
