@@ -1,5 +1,4 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -12,145 +11,13 @@ import {
 } from "react-native";
 
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
+import { SetupItemRow, SETUP_ITEMS } from "@/components/setup-item-row";
+import { TimelineSection } from "@/components/timeline-section";
 import { preventionTheme } from "@/constants/tokens";
 import { useAuth } from "@/contexts/auth-context";
 import { getErrorMessage } from "@/lib/api/client";
 import { updateProfile } from "@/lib/api/profile";
 import { useOnboardingStore } from "@/stores/onboarding-store";
-
-interface SetupItem {
-  label: string;
-  suffix?: string;
-}
-
-interface TimelineItem {
-  dayRange: string;
-  title: string;
-  description: string;
-}
-
-const SETUP_ITEMS: SetupItem[] = [
-  { label: "4 data sources connected (📞, 📱, 📍)" },
-  { label: "Health profile created" },
-  { label: "Personal goals selected" },
-  { label: "Privacy preferences saved 🔒" },
-];
-
-const TIMELINE_ITEMS: TimelineItem[] = [
-  {
-    dayRange: "1-3",
-    title: "AI learns your patterns",
-    description: "No action needed, just live normally",
-  },
-  {
-    dayRange: "4-7",
-    title: "First insights arrive",
-    description: "You'll start seeing personalized recommendations",
-  },
-  {
-    dayRange: "7+",
-    title: "Full personalization",
-    description: "Recommendations become more personalized and actionable",
-  },
-];
-
-function SetupItemRow({ item }: { item: SetupItem }) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 10,
-      }}
-    >
-      <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
-      <Text
-        style={{
-          marginLeft: 12,
-          color: "#2D3449",
-          fontSize: 15,
-          fontFamily: preventionTheme.typography.family.medium,
-          flex: 1,
-        }}
-      >
-        {item.label}
-      </Text>
-    </View>
-  );
-}
-
-function TimelineSection() {
-  const colors = preventionTheme.colors.light;
-
-  return (
-    <View style={{ paddingTop: 4 }}>
-      {TIMELINE_ITEMS.map((item, index) => (
-        <View key={index} style={{ flexDirection: "row", minHeight: 80 }}>
-          {/* Left column: circle + connector line */}
-          <View style={{ alignItems: "center", width: 48 }}>
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: colors.primary,
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 1,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 13,
-                  fontFamily: preventionTheme.typography.family.bold,
-                }}
-              >
-                {item.dayRange}
-              </Text>
-            </View>
-            {index < TIMELINE_ITEMS.length - 1 && (
-              <View
-                style={{
-                  width: 3,
-                  flex: 1,
-                  backgroundColor: colors.primary,
-                  borderRadius: 2,
-                  marginVertical: -2,
-                }}
-              />
-            )}
-          </View>
-
-          {/* Right column: text */}
-          <View style={{ flex: 1, marginLeft: 14, paddingBottom: 18 }}>
-            <Text
-              style={{
-                color: "#2D3449",
-                fontSize: 16,
-                fontFamily: preventionTheme.typography.family.semiBold,
-                marginBottom: 3,
-                marginTop: 2,
-              }}
-            >
-              {item.title}
-            </Text>
-            <Text
-              style={{
-                color: "#7A8DA0",
-                fontSize: 14,
-                fontFamily: preventionTheme.typography.family.body,
-                lineHeight: 20,
-              }}
-            >
-              {item.description}
-            </Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
 
 export default function OnboardingStepFive() {
   const colors = preventionTheme.colors.light;
@@ -296,8 +163,8 @@ export default function OnboardingStepFive() {
             contentContainerStyle={{
               flexGrow: 1,
               paddingHorizontal: 20,
-              paddingTop: 40,
-              paddingBottom: 120,
+              paddingTop: 60,
+              paddingBottom: 20,
             }}
             showsVerticalScrollIndicator={false}
           >
@@ -409,7 +276,7 @@ export default function OnboardingStepFive() {
               style={{
                 height: 56,
                 backgroundColor: colors.primary,
-                borderRadius: 28,
+                borderRadius: 22,
                 justifyContent: "center",
                 alignItems: "center",
               }}

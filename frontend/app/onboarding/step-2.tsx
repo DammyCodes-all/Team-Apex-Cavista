@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import {
   SafeAreaView,
   ScrollView,
-  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -11,55 +10,11 @@ import {
 
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
+import { PermissionCard } from "@/components/permission-card";
+import type { PermissionKey } from "@/constants/permissions";
+import { PERMISSIONS } from "@/constants/permissions";
 import { preventionTheme } from "@/constants/tokens";
 import { useOnboardingStore } from "@/stores/onboarding-store";
-
-type PermissionKey =
-  | "steps"
-  | "sleep"
-  | "screenTime"
-  | "location"
-  | "voiceStress";
-
-const PERMISSIONS: {
-  key: PermissionKey;
-  icon: string;
-  title: string;
-  subtitle: string;
-  optional?: boolean;
-}[] = [
-  {
-    key: "steps",
-    icon: "🚶",
-    title: "Steps & Activity",
-    subtitle: "Track daily movement patterns",
-  },
-  {
-    key: "sleep",
-    icon: "😴",
-    title: "Sleep Tracking",
-    subtitle: "Monitor sleep quality and duration",
-  },
-  {
-    key: "screenTime",
-    icon: "📱",
-    title: "Screen Time",
-    subtitle: "Understand digital habits impact",
-  },
-  {
-    key: "location",
-    icon: "📍",
-    title: "Location Patterns",
-    subtitle: "Identify routine and stress triggers",
-  },
-  {
-    key: "voiceStress",
-    icon: "🎙️",
-    title: "Voice Stress Analysis",
-    subtitle: "Detect stress in voice patterns",
-    optional: true,
-  },
-];
 
 export default function OnboardingStepTwo() {
   const colors = preventionTheme.colors.light;
@@ -131,88 +86,15 @@ export default function OnboardingStepTwo() {
           </View>
 
           <View className="mt-l" style={{ gap: 12 }}>
-            {PERMISSIONS.map((permission) => {
-              const isEnabled = permissions[permission.key];
-
-              return (
-                <View
-                  key={permission.key}
-                  className="flex-row items-center rounded-2xl"
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    borderWidth: 1,
-                    borderColor: "#D8E4EC",
-                    paddingHorizontal: 14,
-                    paddingVertical: 13,
-                  }}
-                >
-                  <Text style={{ fontSize: 30, marginRight: 12 }}>
-                    {permission.icon}
-                  </Text>
-
-                  <View style={{ flex: 1 }}>
-                    <View className="flex-row items-center" style={{ gap: 8 }}>
-                      <Text
-                        style={{
-                          color: "#2D3449",
-                          fontSize: 30 / 2,
-                          lineHeight: 36 / 2,
-                          fontFamily:
-                            preventionTheme.typography.family.semiBold,
-                          flexShrink: 1,
-                        }}
-                      >
-                        {permission.title}
-                      </Text>
-
-                      {permission.optional ? (
-                        <View
-                          className="rounded-md"
-                          style={{
-                            backgroundColor: "#FDECC8",
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: "#DD8B00",
-                              fontSize: 11,
-                              fontFamily:
-                                preventionTheme.typography.family.medium,
-                            }}
-                          >
-                            OPTIONAL
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-
-                    <Text
-                      style={{
-                        color: "#60718A",
-                        fontSize: 24 / 2,
-                        lineHeight: 30 / 2,
-                        fontFamily: preventionTheme.typography.family.body,
-                        marginTop: 4,
-                      }}
-                    >
-                      {permission.subtitle}
-                    </Text>
-                  </View>
-
-                  <Switch
-                    value={isEnabled}
-                    onValueChange={(value) =>
-                      togglePermission(permission.key, value)
-                    }
-                    trackColor={{ false: "#D3DCE6", true: colors.primary }}
-                    thumbColor="#FFFFFF"
-                    ios_backgroundColor="#D3DCE6"
-                  />
-                </View>
-              );
-            })}
+            {PERMISSIONS.map((permission) => (
+              <PermissionCard
+                key={permission.key}
+                permission={permission}
+                isEnabled={permissions[permission.key]}
+                onToggle={(value) => togglePermission(permission.key, value)}
+                activeColor={colors.primary}
+              />
+            ))}
           </View>
 
           <View className="mt-auto pt-l">

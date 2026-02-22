@@ -1,18 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
-  Modal,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
+import { GenderModal, GENDER_OPTIONS } from "@/components/gender-modal";
 import { OnboardingStepDots } from "@/components/onboarding-step-dots";
 import { OnboardingSwipeView } from "@/components/onboarding-swipe-view";
 import { preventionTheme } from "@/constants/tokens";
@@ -36,7 +34,6 @@ export default function OnboardingStepThree() {
 
   // Local state
   const [showGenderModal, setShowGenderModal] = useState(false);
-  const [skipAnonymity, setSkipAnonymity] = useState(false);
   const [errors, setErrors] = useState<{
     age?: string;
     gender?: string;
@@ -46,11 +43,6 @@ export default function OnboardingStepThree() {
 
   const name = useOnboardingStore((state) => state.name);
   const setName = useOnboardingStore((state) => state.setName);
-
-  const GENDER_OPTIONS = [
-    { id: "female", label: "Female", icon: "female" },
-    { id: "male", label: "Male", icon: "male" },
-  ];
 
   const validateForm = () => {
     const nextErrors: {
@@ -511,130 +503,19 @@ export default function OnboardingStepThree() {
           </View>
         </View>
 
-        <Modal
+        <GenderModal
           visible={showGenderModal}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setShowGenderModal(false)}
-        >
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <TouchableOpacity
-              style={{ flex: 1 }}
-              onPress={() => setShowGenderModal(false)}
-              activeOpacity={1}
-            />
-
-            <View
-              style={{
-                backgroundColor: "#FFFFFF",
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                paddingTop: 20,
-                paddingHorizontal: 20,
-                paddingBottom: 32,
-                maxHeight: "70%",
-              }}
-            >
-              <View
-                className="flex-row items-center justify-between"
-                style={{ marginBottom: 16 }}
-              >
-                <Text
-                  style={{
-                    color: "#2D3449",
-                    fontSize: 18,
-                    fontFamily: preventionTheme.typography.family.bold,
-                  }}
-                >
-                  Select Gender
-                </Text>
-
-                <TouchableOpacity
-                  onPress={() => setShowGenderModal(false)}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons name="close" size={24} color="#90A2B7" />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView showsVerticalScrollIndicator={true}>
-                <View style={{ gap: 10 }}>
-                  {GENDER_OPTIONS.map((option) => (
-                    <TouchableOpacity
-                      key={option.id}
-                      onPress={() => {
-                        setGender(option.id);
-                        if (errors.gender) {
-                          setErrors((prev) => ({ ...prev, gender: undefined }));
-                        }
-                        setShowGenderModal(false);
-                      }}
-                      activeOpacity={0.8}
-                      className="flex-row items-center rounded-2xl"
-                      style={{
-                        backgroundColor:
-                          gender === option.id ? "#E8F4F9" : "#F5F8FB",
-                        borderWidth: 2,
-                        borderColor:
-                          gender === option.id ? colors.primary : "#D3DEE8",
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                      }}
-                    >
-                      <MaterialIcons
-                        name={option.icon as any}
-                        size={24}
-                        color={
-                          gender === option.id ? colors.primary : "#90A2B7"
-                        }
-                      />
-                      <Text
-                        style={{
-                          marginLeft: 12,
-                          color:
-                            gender === option.id ? colors.primary : "#2D3449",
-                          fontSize: 16,
-                          fontFamily: preventionTheme.typography.family.medium,
-                          flex: 1,
-                        }}
-                      >
-                        {option.label}
-                      </Text>
-
-                      {gender === option.id && (
-                        <MaterialIcons
-                          name="check-circle"
-                          size={20}
-                          color={colors.primary}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-
-              <TouchableOpacity
-                onPress={() => setShowGenderModal(false)}
-                activeOpacity={0.85}
-                className="h-12 items-center justify-center rounded-2xl"
-                style={{
-                  backgroundColor: "#DCE8EF",
-                  marginTop: 16,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#2F80ED",
-                    fontSize: 16,
-                    fontFamily: preventionTheme.typography.family.medium,
-                  }}
-                >
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          selectedGender={gender}
+          activeColor={colors.primary}
+          onSelect={(id) => {
+            setGender(id);
+            if (errors.gender) {
+              setErrors((prev) => ({ ...prev, gender: undefined }));
+            }
+            setShowGenderModal(false);
+          }}
+          onClose={() => setShowGenderModal(false)}
+        />
       </OnboardingSwipeView>
     </SafeAreaView>
   );
