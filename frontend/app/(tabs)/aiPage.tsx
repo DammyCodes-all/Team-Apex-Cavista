@@ -119,6 +119,8 @@ export default function AiPageScreen() {
     async (text: string) => {
       if (!text.trim()) return;
 
+      console.log("[KinAI] sendMessage called with:", text.trim());
+
       addUserMessage(text.trim());
       setInputText("");
       setLastFailedText(null);
@@ -129,12 +131,18 @@ export default function AiPageScreen() {
       try {
         // Build conversation history including the new message
         const history = useChatStore.getState().conversationHistory;
+        console.log("[KinAI] Conversation history length:", history.length);
         const response = await sendChatMessage(history);
 
+        console.log(
+          "[KinAI] API response received:",
+          response.content?.substring(0, 80),
+        );
         setLoading(false);
         addAiMessage(response.content, response.any?.source);
         scrollToBottom();
       } catch (error) {
+        console.log("[KinAI] API error:", error);
         setLoading(false);
         const errorMessage = mapErrorToUserMessage(error);
         addErrorMessage(errorMessage);

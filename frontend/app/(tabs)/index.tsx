@@ -54,6 +54,12 @@ interface DashboardResponse {
   userName: string | null;
 }
 
+interface AiInsightResponseItem {
+  summary_message?: string;
+  created_at?: string;
+  date?: string;
+}
+
 // Parse sleep string like "7h 30m" → { hours: 7, minutes: 30 }
 function parseSleepString(sleep: string): { hours: number; minutes: number } {
   const match = sleep.match(/(\d+)h\s*(\d+)m/);
@@ -81,6 +87,8 @@ export default function HomeScreen() {
     error,
     execute: fetchDashboard,
   } = useGet<DashboardResponse>("/dashboard");
+  const { data: aiInsightsData, execute: fetchAiInsights } =
+    useGet<AiInsightResponseItem[]>("/ai/insights");
 
   // Real accelerometer-based step counting (works in Expo Go Android)
   const {
@@ -96,7 +104,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    fetchAiInsights();
+  }, [fetchDashboard, fetchAiInsights]);
 
   // Transform dashboard API data to UI format
   const { stepsData, sleepData, screenTimeData, activityBars, goals, insight } =
@@ -186,18 +195,29 @@ export default function HomeScreen() {
 
       // Build insight from dashboard insight object
       const di = dashboardData.insight;
+      const latestAiSummary = [...(aiInsightsData ?? [])]
+        .sort((a, b) => {
+          const left = new Date(a.created_at ?? a.date ?? 0).getTime();
+          const right = new Date(b.created_at ?? b.date ?? 0).getTime();
+          return right - left;
+        })
+        .find((item) => item.summary_message?.trim())?.summary_message;
+
       const insightObj = di
         ? {
-            beforeHighlight: di.summary + " ",
-            highlight: `Risk Score: ${di.risk_score}/100`,
+            beforeHighlight: latestAiSummary ? latestAiSummary : di.summary + " ",
+            highlight: latestAiSummary ? "" : `Risk Score: ${di.risk_score}/100`,
             afterHighlight: "",
             isNew: true,
           }
         : {
-            beforeHighlight: "Your risk score is ",
-            highlight: `${dashboardData.risk_score}/100`,
-            afterHighlight:
-              dashboardData.risk_score < 30
+            beforeHighlight: latestAiSummary
+              ? latestAiSummary
+              : "Your risk score is ",
+            highlight: latestAiSummary ? "" : `${dashboardData.risk_score}/100`,
+            afterHighlight: latestAiSummary
+              ? ""
+              : dashboardData.risk_score < 30
                 ? ". Great job maintaining healthy habits!"
                 : ". Consider increasing activity and improving sleep quality.",
             isNew: true,
@@ -240,6 +260,7 @@ export default function HomeScreen() {
       deviceSparkline,
       deviceTrend,
       deviceActivityBars,
+      aiInsightsData,
     ]);
 
   const renderDailyInsight = () => {

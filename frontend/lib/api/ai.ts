@@ -36,5 +36,8 @@ export interface ChatErrorResponse {
 export async function sendChatMessage(
   messages: ChatMessagePayload[],
 ): Promise<ChatResponse> {
-  return post<ChatResponse, ChatRequest>("/ai/chat", { messages });
+  const response = await post<ChatResponse, ChatRequest>("/ai/chat", {
+    messages,
+  });
+  return response;
 }

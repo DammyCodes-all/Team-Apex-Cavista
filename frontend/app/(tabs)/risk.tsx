@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ScrollView,
   View,
@@ -10,12 +10,85 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Circle, Path, Line, Text as SvgText } from "react-native-svg";
 import { preventionTheme } from "@/constants/tokens";
+import { useGet } from "@/hooks/use-api-methods";
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
-// ─── Header ─────────────────────────────────────────────────────────
+interface DeviationFlags {
+  active_minutes?: boolean;
+  location?: boolean;
+  sedentary?: boolean;
+  sleep?: boolean;
+  steps?: boolean;
+}
+
+interface InsightRecord {
+  _id: string;
+  date?: string;
+  created_at?: string;
+  updated_at?: string;
+  risk_score: number;
+  risk_level?: string;
+  summary_message?: string;
+  deviation_flags?: DeviationFlags;
+  recommended_actions?: unknown[];
+}
+
+function normalizeRiskScore(score: number | undefined) {
+  if (typeof score !== "number" || Number.isNaN(score)) return 0;
+  return Math.max(0, Math.min(100, score));
+}
+
+function normalizeWellnessScore(riskScore: number | undefined) {
+  return 100 - normalizeRiskScore(riskScore);
+}
+
+function extractActionText(action: unknown): string | null {
+  if (typeof action === "string") {
+    const trimmed = action.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (action && typeof action === "object") {
+    const obj = action as Record<string, unknown>;
+    const candidates = [
+      obj.title,
+      obj.action,
+      obj.label,
+      obj.text,
+      obj.description,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim().length > 0) {
+        return candidate.trim();
+      }
+    }
+  }
+
+  return null;
+}
+
+function flattenRecommendedActions(input: unknown[] | undefined): string[] {
+  if (!Array.isArray(input)) return [];
+
+  const flattened: unknown[] = [];
+  input.forEach((item) => {
+    if (Array.isArray(item)) {
+      item.forEach((nested) => flattened.push(nested));
+    } else {
+      flattened.push(item);
+    }
+  });
+
+  const actions = flattened
+    .map((item) => extractActionText(item))
+    .filter((item): item is string => Boolean(item));
+
+  return Array.from(new Set(actions));
+}
+
 function Header() {
   return (
     <View style={{ marginBottom: 8 }}>
@@ -38,7 +111,7 @@ function Header() {
         >
           Your Health Risk Trends
         </Text>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={{
             width: 40,
             height: 40,
@@ -55,7 +128,7 @@ function Header() {
             size={20}
             color={colors.textPrimary}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <Text
         style={{
@@ -72,13 +145,13 @@ function Header() {
 }
 
 // ─── Wellness Risk Score (Donut) ────────────────────────────────────
-function WellnessRiskScore() {
-  const score = 78;
+function WellnessRiskScore({ score, delta }: { score: number; delta: number }) {
   const size = 160;
   const strokeWidth = 14;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
+  const deltaPositive = delta >= 0;
 
   return (
     <View
@@ -165,7 +238,7 @@ function WellnessRiskScore() {
 
       <View
         style={{
-          backgroundColor: "#E8F5E9",
+          backgroundColor: deltaPositive ? "#E8F5E9" : "#FEF2F2",
           paddingHorizontal: 16,
           paddingVertical: 8,
           borderRadius: 20,
@@ -174,16 +247,20 @@ function WellnessRiskScore() {
           gap: 6,
         }}
       >
-        <Ionicons name="trending-up" size={16} color="#10b981" />
+        <Ionicons
+          name={deltaPositive ? "trending-up" : "trending-down"}
+          size={16}
+          color={deltaPositive ? "#10b981" : colors.error}
+        />
         <Text
           style={{
             fontFamily: typo.family.medium,
             fontSize: typo.size.body,
             lineHeight: typo.lineHeight.body,
-            color: "#10b981",
+            color: deltaPositive ? "#10b981" : colors.error,
           }}
         >
-          +5% vs weekly baseline
+          {`${deltaPositive ? "+" : ""}${delta} vs previous insight`}
         </Text>
       </View>
     </View>
@@ -444,23 +521,14 @@ function SignalDeviations() {
 }
 
 // ─── AI Prevention Insights ─────────────────────────────────────────
-function AiInsights() {
+function AiInsights({ summaryMessage }: { summaryMessage: string }) {
   const insights = [
     {
-      icon: "trending-down-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: "#7C3AED",
-      iconBg: "#EDE9FE",
-      title: "Activity Drop Detected",
-      description:
-        "Steps have decreased 30% this week. Consider a short 10-min walk each afternoon to reset.",
-    },
-    {
-      icon: "moon-outline" as keyof typeof Ionicons.glyphMap,
-      iconColor: colors.error,
-      iconBg: "#FEF2F2",
-      title: "Late Night Screen Usage",
-      description:
-        "Screen time peaks at 11 PM. This correlates with your lower sleep scores.",
+      icon: "sparkles-outline" as keyof typeof Ionicons.glyphMap,
+      iconColor: colors.primary,
+      iconBg: "#EAF6FC",
+      title: "Latest AI Summary",
+      description: summaryMessage,
     },
   ];
 
@@ -545,10 +613,14 @@ function AiInsights() {
 }
 
 // ─── 7-Day Risk Forecast Chart ──────────────────────────────────────
-function RiskForecastChart() {
+function RiskForecastChart({ riskData }: { riskData: number[] }) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const blueData = [42, 38, 44, 40, 46, 43, 40];
-  const redData = [30, 28, 34, 30, 32, 35, 38];
+  const blueData =
+    riskData.length === 7
+      ? riskData.map((value) => 100 - normalizeRiskScore(value))
+      : [42, 38, 44, 40, 46, 43, 40];
+  const redData =
+    riskData.length === 7 ? riskData : [30, 28, 34, 30, 32, 35, 38];
   const chartW = SCREEN_WIDTH - 80;
   const chartH = 100;
   const maxVal = 60;
@@ -642,15 +714,13 @@ function RiskForecastChart() {
 }
 
 // ─── Suggested Micro-Actions ────────────────────────────────────────
-function MicroActions() {
-  const actions = [
-    { title: "Stretch every hour", subtitle: "Reduces sedentary risk" },
-    {
-      title: "Wind down 30 mins before bed",
-      subtitle: "Improves sleep latency",
-    },
-    { title: "Drink water now", subtitle: "Hydration check" },
+function MicroActions({ actions }: { actions: string[] }) {
+  const fallbackActions = [
+    "Stretch every hour",
+    "Wind down 30 mins before bed",
+    "Drink water now",
   ];
+  const actionList = actions.length > 0 ? actions.slice(0, 3) : fallbackActions;
 
   return (
     <View style={{ marginBottom: 28 }}>
@@ -666,7 +736,7 @@ function MicroActions() {
         Suggested Micro-Actions
       </Text>
 
-      {actions.map((action, index) => (
+      {actionList.map((action, index) => (
         <TouchableOpacity
           key={index}
           style={{
@@ -702,7 +772,7 @@ function MicroActions() {
                 marginBottom: 2,
               }}
             >
-              {action.title}
+              {action}
             </Text>
             <Text
               style={{
@@ -712,7 +782,7 @@ function MicroActions() {
                 color: colors.textSecondary,
               }}
             >
-              {action.subtitle}
+              Recommended by AI insights
             </Text>
           </View>
         </TouchableOpacity>
@@ -723,6 +793,56 @@ function MicroActions() {
 
 // ─── Main Screen ───────────────────────────────────────────────────
 export default function RiskTabScreen() {
+  const {
+    data: insights,
+    loading,
+    error,
+    execute: fetchInsights,
+  } = useGet<InsightRecord[]>("/ai/insights");
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
+
+  const {
+    wellnessScore,
+    wellnessDelta,
+    summaryMessage,
+    actionList,
+    last7Risk,
+  } = useMemo(() => {
+    const sorted = [...(insights ?? [])].sort((a, b) => {
+      const left = new Date(a.created_at ?? a.date ?? 0).getTime();
+      const right = new Date(b.created_at ?? b.date ?? 0).getTime();
+      return right - left;
+    });
+
+    const latest = sorted[0];
+    const previous = sorted[1];
+
+    const latestRisk = normalizeRiskScore(latest?.risk_score);
+    const previousRisk = normalizeRiskScore(previous?.risk_score);
+
+    const recommendedActions = flattenRecommendedActions(
+      latest?.recommended_actions,
+    );
+
+    const riskSeries = sorted
+      .slice(0, 7)
+      .map((item) => normalizeRiskScore(item.risk_score))
+      .reverse();
+
+    return {
+      wellnessScore: normalizeWellnessScore(latestRisk),
+      wellnessDelta: previous ? previousRisk - latestRisk : 0,
+      summaryMessage:
+        latest?.summary_message ??
+        "No new AI insight yet. Keep tracking your daily habits.",
+      actionList: recommendedActions,
+      last7Risk: riskSeries,
+    };
+  }, [insights]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -730,11 +850,46 @@ export default function RiskTabScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Header />
-        <WellnessRiskScore />
+
+        {error && (
+          <View
+            style={{
+              backgroundColor: colors.error + "15",
+              padding: 12,
+              borderRadius: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Ionicons
+              name="alert-circle-outline"
+              size={20}
+              color={colors.error}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              style={{
+                fontFamily: typo.family.body,
+                fontSize: typo.size.caption,
+                color: colors.error,
+                flex: 1,
+              }}
+            >
+              Unable to load AI insights. Showing fallback trend data.
+            </Text>
+          </View>
+        )}
+
+        <WellnessRiskScore score={wellnessScore} delta={wellnessDelta} />
         <SignalDeviations />
-        <AiInsights />
-        <RiskForecastChart />
-        <MicroActions />
+        <AiInsights
+          summaryMessage={
+            loading ? "Loading latest AI summary..." : summaryMessage
+          }
+        />
+        <RiskForecastChart riskData={last7Risk} />
+        <MicroActions actions={actionList} />
       </ScrollView>
     </SafeAreaView>
   );
