@@ -13,3 +13,21 @@ dist/
 build/
 *.egg-info/
 /.DS_Store
+
+# ignore markdown documentation
+*.md
+
+# ignore test directories and files
+/tests/
+**/tests/
+test_*.py
+*_test.py
+*tests*
+
+# ignore any .tst files
+*.tst
+
+# ignore all python files except those in the app/ directory
+*.py
+!app/
+!app/**/*.py

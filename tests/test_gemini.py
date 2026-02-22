@@ -43,3 +43,24 @@ def test_ask_gemini_no_api_key():
     with pytest.raises(RuntimeError) as excinfo:
         gs.ask_gemini("hi")
     assert "Gemini API key not configured" in str(excinfo.value)
+
+
+def test_ask_gemini_quota(monkeypatch):
+    """When the underlying client errors due to quota, we surface quota_exceeded."""
+    settings.GEMINI_MODEL = "gemini-3-pro"
+    settings.GEMINI_API_KEY = "dummy"
+
+    class DummyClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        @property
+        def models(self):
+            class M:
+                def generate_content(self_inner, **kwargs):
+                    raise Exception("RESOURCE_EXHAUSTED: quota exceeded")
+            return M()
+    monkeypatch.setattr(gs, "Client", lambda *args, **kwargs: DummyClient())
+
+    with pytest.raises(RuntimeError) as excinfo:
+        gs.ask_gemini("hello")
+    assert "quota_exceeded" in str(excinfo.value)
