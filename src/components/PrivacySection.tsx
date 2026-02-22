@@ -24,7 +24,7 @@ const PrivacySection = () => (
             Built on <span className="text-primary">Trust</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8 max-w-md">
-            Your health data is yours. We built Prevention AI with a privacy-first architecture — everything processes on your device.
+            Your health data is yours. We built KINAI with a privacy-first architecture — everything processes on your device.
           </p>
           <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-primary/5 border border-primary/15">
             <Lock className="w-5 h-5 text-primary" />

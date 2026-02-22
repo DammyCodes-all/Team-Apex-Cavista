@@ -47,7 +47,7 @@ const ScenarioSection = () => (
           Prevention <span className="text-gradient-teal">Before Symptoms</span>
         </h2>
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-          A student during exam week experiences reduced sleep and activity. Here's how Prevention AI steps in.
+          A student during exam week experiences reduced sleep and activity. Here's how KINAI steps in.
         </p>
       </motion.div>
 

@@ -40,7 +40,7 @@ const HeroSection = () => (
           </h1>
 
           <p className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-            Prevention AI passively tracks your daily patterns, learns your personal baseline, and alerts you to early lifestyle shifts — before they become health risks.
+            KINAI passively tracks your daily patterns, learns your personal baseline, and alerts you to early lifestyle shifts — before they become health risks.
           </p>
 
           {/* App Store Buttons */}

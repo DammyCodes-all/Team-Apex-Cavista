@@ -7,10 +7,10 @@ const Footer = () => (
         <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
           <Shield className="w-4 h-4 text-primary" />
         </div>
-        <span className="text-sm font-semibold text-foreground">Prevention AI</span>
+        <span className="text-sm font-semibold text-foreground">KINAI</span>
       </div>
       <p className="text-xs text-muted-foreground">
-        © 2026 Prevention AI. All rights reserved. Not a medical device.
+        © 2026 KINAI. All rights reserved. Not a medical device.
       </p>
     </div>
   </footer>

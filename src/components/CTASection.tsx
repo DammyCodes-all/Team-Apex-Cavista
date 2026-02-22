@@ -22,7 +22,7 @@ const CTASection = () => (
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a href="#" className="px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold text-base hover:opacity-90 transition-opacity">
-            Download Prevention AI
+            Download KINAI
           </a>
           <a href="#" className="px-8 py-4 rounded-full glass border border-glass-border text-foreground font-medium text-base hover:bg-card/60 transition-colors">
             Join the Prevention Movement
