@@ -1,10 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { ScrollView, View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { preventionTheme } from "@/constants/tokens";
-import { useMetrics } from "@/hooks/use-metrics";
+import { useGet } from "@/hooks/use-api-methods";
 import {
   Header,
   DailyInsightCard,
@@ -17,15 +17,6 @@ import {
 
 const colors = preventionTheme.colors.light;
 const typo = preventionTheme.typography;
-
-// Get today's date in YYYY-MM-DD format
-function getTodayDateString(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 interface ActivityBar {
   h: number;
@@ -40,6 +31,36 @@ interface GoalItem {
   color: string;
 }
 
+interface InsightAction {
+  [key: string]: any;
+}
+
+interface DashboardInsight {
+  actions: InsightAction[];
+  risk_score: number;
+  summary: string;
+}
+
+interface DashboardResponse {
+  activityBars: number[];
+  goals: Record<string, any>;
+  insight: DashboardInsight | null;
+  risk_score: number;
+  screenTime: number;
+  sleep: string;
+  steps: number;
+  userName: string | null;
+}
+
+// Parse sleep string like "7h 30m" → { hours: 7, minutes: 30 }
+function parseSleepString(sleep: string): { hours: number; minutes: number } {
+  const match = sleep.match(/(\d+)h\s*(\d+)m/);
+  if (match) {
+    return { hours: parseInt(match[1], 10), minutes: parseInt(match[2], 10) };
+  }
+  return { hours: 0, minutes: 0 };
+}
+
 function minutesToHoursAndMinutes(minutes: number): {
   hours: number;
   minutes: number;
@@ -49,34 +70,26 @@ function minutesToHoursAndMinutes(minutes: number): {
   return { hours, minutes: mins };
 }
 
-// Generate activity bars from sedentary and active minutes
-function generateActivityBars(
-  sedentaryMinutes: number,
-  activeMinutes: number,
-): ActivityBar[] {
-  const bars: ActivityBar[] = [];
-
-  // Create 7 bars representing the day roughly
-  for (let i = 0; i < 7; i++) {
-    const segmentActive = i * 2 <= Math.floor(activeMinutes) / 60;
-    bars.push({
-      h: Math.random() * 100,
-      active: segmentActive,
-    });
-  }
-  return bars;
-}
-
 // Main Screen
 export default function HomeScreen() {
   const router = useRouter();
-  const today = useMemo(() => getTodayDateString(), []);
-  const { data: metricsData, loading, error } = useMetrics(today);
+  const {
+    data: dashboardData,
+    loading,
+    error,
+    execute: fetchDashboard,
+  } = useGet<DashboardResponse>("/dashboard");
 
-  // Transform API data to UI format
+  useEffect(() => {
+    fetchDashboard()
+      .then((res) => console.log("Dashboard response:", res))
+      .catch((err) => console.error("Dashboard fetch error:", err));
+  }, [fetchDashboard]);
+
+  // Transform dashboard API data to UI format
   const { stepsData, sleepData, screenTimeData, activityBars, goals, insight } =
     useMemo(() => {
-      if (!metricsData) {
+      if (!dashboardData) {
         // Default values while loading
         return {
           stepsData: { count: 0, trend: 0, sparkline: Array(12).fill(0) },
@@ -93,12 +106,8 @@ export default function HomeScreen() {
         };
       }
 
-      const sleep = minutesToHoursAndMinutes(
-        metricsData.sleep_duration_minutes,
-      );
-      const screenTime = minutesToHoursAndMinutes(
-        metricsData.screen_time_minutes,
-      );
+      const sleep = parseSleepString(dashboardData.sleep);
+      const screenTime = minutesToHoursAndMinutes(dashboardData.screenTime);
 
       // Classify sleep quality based on hours
       const sleepQuality: "Excellent" | "Good" | "Fair" | "Poor" =
@@ -118,16 +127,74 @@ export default function HomeScreen() {
             ? "Moderate"
             : "High Usage";
 
-      // Generate sparkline (mock for now - could be from weekly data)
+      // Generate sparkline from steps
       const sparkline = Array.from(
         { length: 12 },
-        () => Math.floor(Math.random() * 100) + metricsData.steps / 100,
+        () => Math.floor(Math.random() * 100) + dashboardData.steps / 100,
       );
+
+      // Map goals from dashboard object, fall back to steps-based goal
+      const goalEntries = Object.entries(dashboardData.goals ?? {});
+      const mappedGoals: GoalItem[] =
+        goalEntries.length > 0
+          ? goalEntries.map(([label, value]: [string, any], i) => ({
+              label,
+              current: value?.current ?? 0,
+              target: value?.target ?? 100,
+              unit: value?.unit ?? "",
+              color: i === 0 ? colors.primary : "#7C3AED",
+            }))
+          : [
+              {
+                label: "Steps",
+                current: dashboardData.steps,
+                target: 10000,
+                unit: "steps",
+                color: colors.primary,
+              },
+            ];
+
+      // Transform raw number array into ActivityBar objects
+      const rawBars = dashboardData.activityBars ?? [];
+      const maxBar = Math.max(...rawBars, 1); // avoid division by zero
+      const median =
+        [...rawBars].sort((a, b) => a - b)[Math.floor(rawBars.length / 2)] ?? 0;
+      const bars: ActivityBar[] =
+        rawBars.length > 0
+          ? rawBars.map((value) => ({
+              h: Math.round((value / maxBar) * 100),
+              active: value > median,
+            }))
+          : Array(7)
+              .fill(null)
+              .map((_, i) => ({
+                h: Math.random() * 100,
+                active: i % 2 === 0,
+              }));
+
+      // Build insight from dashboard insight object
+      const di = dashboardData.insight;
+      const insightObj = di
+        ? {
+            beforeHighlight: di.summary + " ",
+            highlight: `Risk Score: ${di.risk_score}/100`,
+            afterHighlight: "",
+            isNew: true,
+          }
+        : {
+            beforeHighlight: "Your risk score is ",
+            highlight: `${dashboardData.risk_score}/100`,
+            afterHighlight:
+              dashboardData.risk_score < 30
+                ? ". Great job maintaining healthy habits!"
+                : ". Consider increasing activity and improving sleep quality.",
+            isNew: true,
+          };
 
       return {
         stepsData: {
-          count: metricsData.steps,
-          trend: metricsData.risk_score > 50 ? -10 : 12, // Mock trend
+          count: dashboardData.steps,
+          trend: dashboardData.risk_score > 50 ? -10 : 12,
           sparkline,
         },
         sleepData: {
@@ -140,41 +207,15 @@ export default function HomeScreen() {
           minutes: screenTime.minutes,
           status: screenStatus,
         },
-        activityBars: generateActivityBars(
-          metricsData.sedentary_minutes,
-          metricsData.active_minutes,
-        ),
-        goals: [
-          {
-            label: "Active Minutes",
-            current: metricsData.active_minutes,
-            target: 150,
-            unit: "mins",
-            color: colors.primary,
-          },
-          {
-            label: "Location Diversity",
-            current: Math.round(metricsData.location_diversity_score * 10),
-            target: 10,
-            unit: "score",
-            color: "#7C3AED",
-          },
-        ] as GoalItem[],
-        insight: {
-          beforeHighlight: "Your risk score is ",
-          highlight: `${metricsData.risk_score}/100`,
-          afterHighlight:
-            metricsData.risk_score < 30
-              ? ". Great job maintaining healthy habits!"
-              : ". Consider increasing activity and improving sleep quality.",
-          isNew: true,
-        },
+        activityBars: bars,
+        goals: mappedGoals,
+        insight: insightObj,
       };
-    }, [metricsData]);
+    }, [dashboardData]);
 
   const renderDailyInsight = () => {
     if (loading) return <DailyInsightSkeleton />;
-    if (error || !metricsData) {
+    if (error || !dashboardData) {
       return (
         <DailyInsightCard
           insight={{
@@ -191,8 +232,7 @@ export default function HomeScreen() {
 
   const renderMetricsGrid = () => {
     if (loading) return <MetricsGridSkeleton />;
-    if (error || !metricsData) {
-      // Fallback: Show zero metrics with message
+    if (error || !dashboardData) {
       return (
         <MetricsGrid
           steps={{ count: 0, trend: 0, sparkline: Array(12).fill(0) }}
@@ -214,24 +254,16 @@ export default function HomeScreen() {
 
   const renderWeeklyGoals = () => {
     if (loading) return <WeeklyGoalsSkeleton />;
-    if (error || !metricsData) {
-      // Fallback: Show placeholder goals
+    if (error || !dashboardData) {
       return (
         <WeeklyGoals
           goals={[
             {
-              label: "Active Minutes",
+              label: "Steps",
               current: 0,
-              target: 150,
-              unit: "mins",
+              target: 10000,
+              unit: "steps",
               color: colors.primary,
-            },
-            {
-              label: "Location Diversity",
-              current: 0,
-              target: 10,
-              unit: "score",
-              color: "#7C3AED",
             },
           ]}
         />
