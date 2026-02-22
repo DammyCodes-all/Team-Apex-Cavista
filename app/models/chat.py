@@ -34,3 +34,11 @@ class ChatResponse(BaseModel):
             "example": {"role": "assistant", "content": "Try to keep a regular bedtime.", "any": {"source": "openrouter"}}
         }
     }
+
+class ChatHistoryItem(BaseModel):
+    role: str
+    content: str
+    timestamp: str
+
+class ChatHistoryResponse(BaseModel):
+    messages: List[ChatHistoryItem]
