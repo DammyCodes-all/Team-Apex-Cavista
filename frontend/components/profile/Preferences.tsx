@@ -27,7 +27,7 @@ export function Preferences({
       onPress: () => onToggle("sleep"),
     },
     {
-      label: "HealthKit Sync",
+      label: "Allow Tracking Steps & Activity",
       value: trackingSteps,
       onPress: () => onToggle("steps"),
     },

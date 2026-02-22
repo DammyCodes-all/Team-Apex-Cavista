@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { post } from "@/lib/api/client";
+import { post, setAuthToken } from "@/lib/api/client";
 
 const AUTH_STORAGE_KEY = "@team-axle-cavista/auth-session";
 const AUTH_HISTORY_STORAGE_KEY = "@team-axle-cavista/auth-history";
@@ -205,10 +205,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        await post<string, LoginPayload>("/auth/login", payload);
+        const response = await post<
+          {
+            access_token?: string;
+            token?: string;
+            user?: { email: string; fullName?: string };
+          },
+          LoginPayload
+        >("/auth/login", payload);
+
+        const token = response?.access_token || response?.token;
+        if (!token) {
+          throw new Error("No token in login response");
+        }
+
         const nextSession = buildSession(payload.email);
         setSession(nextSession);
-        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
+        await Promise.all([
+          persistSession(nextSession),
+          persistAuthHistory(),
+          setAuthToken(token),
+        ]);
         return true;
       } catch (caughtError) {
         const message = getLoginErrorMessage(caughtError);
@@ -227,18 +244,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        await post<string, { email: string; password: string; name: string }>(
-          "/auth/signup",
+        const response = await post<
           {
-            email: payload.email,
-            password: payload.password,
-            name: payload.name,
+            access_token?: string;
+            token?: string;
+            user?: { email: string; fullName?: string };
           },
-        );
+          { email: string; password: string; name: string }
+        >("/auth/signup", {
+          email: payload.email,
+          password: payload.password,
+          name: payload.name,
+        });
+
+        const token = response?.access_token || response?.token;
+        if (!token) {
+          throw new Error("No token in signup response");
+        }
 
         const nextSession = buildSession(payload.email, payload.name);
         setSession(nextSession);
-        await Promise.all([persistSession(nextSession), persistAuthHistory()]);
+        await Promise.all([
+          persistSession(nextSession),
+          persistAuthHistory(),
+          setAuthToken(token),
+        ]);
         return true;
       } catch (caughtError) {
         const message = getSignupErrorMessage(caughtError);
@@ -261,7 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always clear local session even if logout request fails.
     } finally {
       setSession(null);
-      await Promise.all([persistSession(null)]);
+      await Promise.all([persistSession(null), setAuthToken(null)]);
       setIsLoading(false);
     }
   }, [persistSession]);

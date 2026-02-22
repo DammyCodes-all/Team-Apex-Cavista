@@ -21,19 +21,19 @@ export function AvatarSection({ name, subtitle }: AvatarSectionProps) {
       <Text
         style={{
           fontFamily: typo.family.semiBold,
-          fontSize: typo.size.headline,
-          lineHeight: typo.lineHeight.headline,
+          fontSize: typo.size.subheadline,
+          lineHeight: typo.lineHeight.subheadline,
           color: colors.textPrimary,
           alignSelf: "flex-start",
-          marginBottom: 20,
-          marginTop: 20,
+          marginBottom: 16,
+          marginTop: 12,
         }}
       >
         Your Profile & Preferences
       </Text>
 
       {/* Avatar circle */}
-      <View style={{ position: "relative", marginBottom: 14 }}>
+      <View style={{ position: "relative", marginBottom: 12 }}>
         <View
           style={{
             width: 100,
@@ -61,8 +61,8 @@ export function AvatarSection({ name, subtitle }: AvatarSectionProps) {
       <Text
         style={{
           fontFamily: typo.family.semiBold,
-          fontSize: typo.size.subheadlineLg,
-          lineHeight: typo.lineHeight.subheadlineLg,
+          fontSize: typo.size.body,
+          lineHeight: typo.lineHeight.body,
           color: colors.textPrimary,
           marginBottom: 2,
         }}
