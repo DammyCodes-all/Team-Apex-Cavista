@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Menu, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 const navLinks = ["Features", "How It Works", "Privacy", "Download"];
 
 const Navbar = () => {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -24,15 +27,19 @@ const Navbar = () => {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((l) => (
-            <a
-              key={l}
-              href={`#${l.toLowerCase().replace(/ /g, "-")}`}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {l}
-            </a>
-          ))}
+          {navLinks.map((l) => {
+            const slug = l.toLowerCase().replace(/ /g, "-");
+            const href = l === "How It Works" ? "/how-it-works" : isHome ? `#${slug}` : `/#${slug}`;
+            return (
+              <a
+                key={l}
+                href={href}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {l}
+              </a>
+            );
+          })}
           <a
             href="#download"
             className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
