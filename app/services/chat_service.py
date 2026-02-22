@@ -11,6 +11,32 @@ If neither is configured the function will raise a `RuntimeError`.
 from typing import List, Dict
 from app.config.settings import settings
 import logging
+from datetime import datetime, timedelta
+
+# simple per-user rate limiter (reset daily) – for production use a shared
+# store such as Redis or persist in the user document in MongoDB.
+_usage_counts: Dict[str, Dict] = {}
+
+RATE_LIMIT_PER_DAY = 3
+
+
+def _check_rate_limit(user_id: str) -> bool:
+    """Return True if user is still within quota, False if exceeded."""
+    now = datetime.utcnow()
+    entry = _usage_counts.get(user_id)
+    if not entry or entry["reset_at"] <= now:
+        # start new window
+        _usage_counts[user_id] = {"count": 0, "reset_at": now + timedelta(days=1)}
+        entry = _usage_counts[user_id]
+    return entry["count"] < RATE_LIMIT_PER_DAY
+
+
+def _increment_usage(user_id: str):
+    entry = _usage_counts.get(user_id)
+    if not entry:
+        _check_rate_limit(user_id)  # initializes
+        entry = _usage_counts[user_id]
+    entry["count"] += 1
 
 import httpx
 from httpx import HTTPStatusError, RequestError
@@ -24,6 +50,16 @@ def build_system_prompt() -> str:
         "stress, and wellbeing. Do not provide medical diagnoses or act as a "
         "doctor. Be concise and understandable."
     )
+    
+print("LOCAL_LLM_URL:", repr(settings.LOCAL_LLM_URL))
+print("GEMINI_API_KEY:", repr(settings.GEMINI_API_KEY))
+print("GEMINI_MODEL:", repr(settings.GEMINI_MODEL))
+
+async def _truncate_content(text: str, max_chars: int = 500) -> str:
+    """Shorten assistant content to avoid overly long replies."""
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars].rsplit(" ", 1)[0] + "…"
 
 
 async def chat_with_user(user_id: str, messages: List[Dict]) -> Dict:

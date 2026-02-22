@@ -242,6 +242,53 @@ async def test_chat_fallback_when_no_gemini_model(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_chat_rate_limit(monkeypatch):
+    """User can only send three messages per day."""
+    async def _cu():
+        return {"user_id": "uid", "email": "test@example.com"}
+    app.dependency_overrides[deps.get_current_user] = _cu
+    app.dependency_overrides[deps.get_database] = lambda request=None: fake_get_db()
+    from app.services import chat_service
+    async def fake_chat(u, msgs):
+        return {"role":"assistant","content":"hi","provider":"local"}
+    monkeypatch.setattr(chat_service, "chat_with_user", fake_chat)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        for i in range(3):
+            resp = await ac.post("/ai/chat", json={"messages":[{"role":"user","content":"x"}]})
+            assert resp.status_code == 200
+        resp = await ac.post("/ai/chat", json={"messages":[{"role":"user","content":"x"}]})
+        assert resp.status_code == 429
+        assert resp.json()["error_type"] == "rate_limit"
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_chat_truncation(monkeypatch):
+    """Responses longer than limit are truncated."""
+    async def _cu():
+        return {"user_id": "uid2", "email": "test@example.com"}
+    app.dependency_overrides[deps.get_current_user] = _cu
+    app.dependency_overrides[deps.get_database] = lambda request=None: fake_get_db()
+    from app.services import chat_service
+    long_text = "word " * 200
+    async def fake_chat(u, msgs):
+        return {"role":"assistant","content": long_text, "provider":"local"}
+    monkeypatch.setattr(chat_service, "chat_with_user", fake_chat)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        resp = await ac.post("/ai/chat", json={"messages":[{"role":"user","content":"hello"}]})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["content"]) < len(long_text)
+
+    app.dependency_overrides.clear()
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
 async def test_reports_download_csv(monkeypatch):
     """CSV export endpoint returns a proper text/csv response."""
     async def _cu():
@@ -272,5 +319,33 @@ async def test_reports_download_csv(monkeypatch):
         assert "text/csv" in resp.headers.get("content-type", "")
         data = await resp.aread()
         assert b"timestamp,metric,value" in data
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_chat_quota_exceeded(monkeypatch):
+    """When Gemini client reports quota exhausted, return 429 with error_type."""
+    async def _cu():
+        return {"user_id": "fake-user-id", "email": "test@example.com"}
+    app.dependency_overrides[deps.get_current_user] = _cu
+    app.dependency_overrides[deps.get_database] = lambda request=None: fake_get_db()
+
+    from app.config import settings
+    settings.GEMINI_API_KEY = "dummy"
+    settings.GEMINI_MODEL = "gemini-3-pro"
+
+    from app.services import gemini_service
+    # simulate quota exception being wrapped
+    def fake_ask(msg):
+        raise RuntimeError("quota_exceeded: simulated limit reached")
+    monkeypatch.setattr(gemini_service, "ask_gemini", fake_ask)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        resp = await ac.post("/ai/chat", json={"messages": [{"role": "user", "content": "Hello"}]})
+        assert resp.status_code == 429
+        data = resp.json()
+        assert data.get("error_type") == "quota_exceeded"
+        assert "simulated limit" in data.get("detail", "")
 
     app.dependency_overrides.clear()

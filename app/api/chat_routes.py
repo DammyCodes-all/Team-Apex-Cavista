@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.models.chat import ChatRequest, ChatResponse
 from app.models.error import ErrorResponse
-from app.services.chat_service import chat_with_user
+from app.services.chat_service import chat_with_user, _check_rate_limit, _increment_usage, _truncate_content
 from app.services.gemini_service import ask_gemini
 from app.services.chat_history_service import save_chat_message, get_chat_history
 from app.config.settings import settings
@@ -65,6 +65,13 @@ async def chat_endpoint(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail={"error_type": "authentication", "detail": "Invalid user"})
 
+    # daily rate limit per user
+    if not _check_rate_limit(user_id):
+        raise HTTPException(
+            status_code=429,
+            detail={"error_type": "rate_limit", "detail": "Daily chat limit reached"}
+        )
+
     # choose backend
     try:
         user_text = payload.messages[-1].content if payload.messages else ""
@@ -85,6 +92,11 @@ async def chat_endpoint(
             if reply.get("provider"):
                 reply.setdefault("any", {})["provider"] = reply.pop("provider")
         # store assistant message
+        # increment quota
+        _increment_usage(user_id)
+        # truncate reply if necessary
+        if reply.get("content"):
+            reply["content"] = await _truncate_content(reply["content"])
         await save_chat_message(db, user_id, "assistant", reply.get("content", ""))
         return reply
     except RuntimeError as exc:
@@ -95,4 +107,11 @@ async def chat_endpoint(
             detail={"error_type": "service_unavailable", "detail": msg}
         )
     except Exception as exc:
+        detail_msg = str(exc)
+        # quota messages are already prefixed when raised
+        if detail_msg.startswith("quota_exceeded"):
+            raise HTTPException(
+                status_code=429,
+                detail={"error_type": "quota_exceeded", "detail": detail_msg}
+            )
         raise HTTPException(status_code=500, detail={"error_type": "service_error", "detail": f"Chat service error: {exc}"})
