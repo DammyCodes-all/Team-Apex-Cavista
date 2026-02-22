@@ -43,6 +43,11 @@ async def ai_baseline_status(
             "baseline_start_date": "2026-02-07T10:30:00",
             "message": "Baseline learning complete. AI insights are now active."
         }
+    
+    Common error payloads:
+    ```json
+    { "error_type": "not_initialized", "detail": "Health profile not initialized. Please complete signup." }
+    ```
     """
     user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
@@ -51,7 +56,7 @@ async def ai_baseline_status(
     if status_info.get("baseline_status") == "not_initialized":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Health profile not initialized. Please complete signup."
+            detail={"error_type": "not_initialized", "detail": "Health profile not initialized. Please complete signup."}
         )
     
     return status_info

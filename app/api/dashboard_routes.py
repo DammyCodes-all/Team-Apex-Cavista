@@ -12,9 +12,20 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("")
 async def dashboard(current_user=Depends(get_current_user), db=Depends(get_database)):
+    """Retrieve the current dashboard snapshot for the user.
+
+    Errors:
+    - 401 Unauthorized: missing/invalid credentials
+    - any other status codes propagated from service
+
+    Example error response:
+    ```json
+    { "error_type": "authentication", "detail": "Invalid user" }
+    ```
+    """
     user_id = current_user.get("user_id")
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid user")
+        raise HTTPException(status_code=401, detail={"error_type": "authentication", "detail": "Invalid user"})
     data = await get_dashboard_data(db, user_id)
     return data
 
@@ -24,6 +35,7 @@ async def dashboard_ws(websocket: WebSocket):
     # authenticate via query param token
     token = websocket.query_params.get("token")
     if not token:
+        # 1008 = policy violation; missing token treated as authentication error
         await websocket.close(code=1008)
         return
     try:

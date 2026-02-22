@@ -5,6 +5,7 @@ function.
 """
 from typing import List, Dict
 from app.config.settings import settings
+import logging
 
 # import whichever client you prefer; OpenAI is used here as an example
 import openai
@@ -79,5 +80,6 @@ async def chat_with_user(user_id: str, messages: List[Dict]) -> Dict:
             choice = resp.choices[0].message
             return {"role": choice["role"], "content": choice["content"]}
     except Exception as e:
-        # wrap in a runtime error to be handled by route layer
-        raise RuntimeError(f"LLM request failed: {str(e)}")
+        logging.error(f"chat_with_user error: {e}")
+        # fallback response when LLM not reachable
+        return {"role": "assistant", "content": "Sorry, I cannot reach the AI service right now. Please try again later."}

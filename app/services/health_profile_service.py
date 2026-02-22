@@ -95,7 +95,16 @@ async def increment_baseline_days(db, user_id: str) -> Optional[Dict[str, Any]]:
         return None
     
     new_count = profile.get("baseline_days_collected", 0) + 1
-    new_status = "active" if new_count >= 14 else "collecting"
+    new_status = "collecting"
+
+    # if this tick pushes us over 14 days, compute baseline immediately
+    if new_count >= 14:
+        # run activation logic before updating status, so baseline metrics are
+        # calculated while profile.status still reads "collecting".
+        from app.services.ai_service import activate_baseline_if_ready
+        activated = await activate_baseline_if_ready(db, user_id)
+        # regardless of whether active call succeeded, mark status active
+        new_status = "active"
     
     update = {
         "baseline_days_collected": new_count,

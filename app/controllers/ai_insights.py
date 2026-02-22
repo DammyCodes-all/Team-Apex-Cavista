@@ -73,6 +73,13 @@ async def ai_insights(
                 "updated_at": "2026-02-21T10:35:00"
             }
         ]
+    
+    Typical error payloads returned by this endpoint:
+
+    ```json
+    { "error_type": "not_found", "detail": "Health profile not found. Complete signup first." }
+    { "error_type": "baseline_incomplete", "detail": "AI engine still collecting baseline data. 5 days remaining." }
+    ```
     """
     user_id = current_user.get("user_id") or str(current_user.get("_id"))
     
@@ -81,14 +88,17 @@ async def ai_insights(
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Health profile not found. Complete signup first."
+            detail={"error_type": "not_found", "detail": "Health profile not found. Complete signup first."}
         )
     
     # Check if baseline is active
     if profile.get("baseline_status") != "active":
         raise HTTPException(
             status_code=status.HTTP_202_ACCEPTED,
-            detail=f"AI engine still collecting baseline data. {14 - profile.get('baseline_days_collected', 0)} days remaining."
+            detail={
+                "error_type": "baseline_incomplete",
+                "detail": f"AI engine still collecting baseline data. {14 - profile.get('baseline_days_collected', 0)} days remaining."
+            }
         )
     
     # Retrieve insights
