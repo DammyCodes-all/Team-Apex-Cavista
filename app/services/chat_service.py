@@ -8,9 +8,14 @@ from app.config.settings import settings
 
 # import whichever client you prefer; OpenAI is used here as an example
 import openai
+import httpx
 
 # initialize the client once
 openai.api_key = getattr(settings, "OPENAI_API_KEY", "")
+
+# if openrouter key provided set provider automatically
+if settings.OPENROUTER_API_KEY:
+    settings.LLM_PROVIDER = "openrouter"
 
 
 def build_system_prompt() -> str:
@@ -41,11 +46,28 @@ async def chat_with_user(user_id: str, messages: List[Dict]) -> Dict:
     system_message = {"role": "system", "content": build_system_prompt()}
     payload = [system_message] + messages
 
-    resp = await openai.ChatCompletion.acreate(
-        model="gpt-4.1",
-        messages=payload,
-        temperature=0.7,
-        max_tokens=500,
-    )
-    choice = resp.choices[0].message
-    return {"role": choice["role"], "content": choice["content"]}
+    if settings.LLM_PROVIDER == "openrouter":
+        # call OpenRouter REST endpoint
+        url = "https://api.openrouter.ai/v1/chat/completions"
+        headers = {"Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"}
+        data = {
+            "model": "openrouter-gpt4o-mini",
+            "messages": payload,
+            "temperature": 0.7,
+            "max_tokens": 500,
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(url, json=data, headers=headers)
+            r.raise_for_status()
+            result = r.json()
+        choice = result["choices"][0]["message"]
+        return {"role": choice.get("role"), "content": choice.get("content")}
+    else:
+        resp = await openai.ChatCompletion.acreate(
+            model="gpt-4.1",
+            messages=payload,
+            temperature=0.7,
+            max_tokens=500,
+        )
+        choice = resp.choices[0].message
+        return {"role": choice["role"], "content": choice["content"]}

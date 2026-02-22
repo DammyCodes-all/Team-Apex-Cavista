@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     # AI / LLM Keys
     OPENAI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    # option: "openai" or "openrouter" (auto-detect if key present)
+    LLM_PROVIDER: str = "openai"
 
     # Runtime flags
     ENV: str = "development"
