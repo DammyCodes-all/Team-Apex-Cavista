@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Accelerometer } from "expo-sensors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, type AppStateStatus } from "react-native";
+import { useAuth } from "@/contexts/auth-context";
 
 const STORAGE_KEY = "step_counter_data";
 const MAGNITUDE_THRESHOLD = 1.18; // g-force threshold for a step
@@ -42,6 +43,11 @@ export interface StepCounterResult {
 }
 
 export function useStepCounter(): StepCounterResult {
+  const { user } = useAuth();
+  const userEmail = user?.email?.trim().toLowerCase();
+  const storageKey = userEmail
+    ? `${STORAGE_KEY}:${userEmail}`
+    : STORAGE_KEY;
   const [totalSteps, setTotalSteps] = useState(0);
   const [hourlyBuckets, setHourlyBuckets] = useState<number[]>(emptyBuckets());
   const [isAvailable, setIsAvailable] = useState(false);
@@ -56,10 +62,18 @@ export function useStepCounter(): StepCounterResult {
   const prevMagnitudeRef = useRef(9.81);
   const risingRef = useRef(false);
 
+  const resetStepData = useCallback(() => {
+    setTotalSteps(0);
+    setHourlyBuckets(emptyBuckets());
+    stepCountRef.current = 0;
+    bucketsRef.current = emptyBuckets();
+    persistCounterRef.current = 0;
+  }, []);
+
   // Load persisted data on mount
   const loadPersistedData = useCallback(async () => {
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const raw = await AsyncStorage.getItem(storageKey);
       if (raw) {
         const stored: StoredStepData = JSON.parse(raw);
         if (stored.date === getTodayKey()) {
@@ -73,7 +87,7 @@ export function useStepCounter(): StepCounterResult {
     } catch {
       // If loading fails, start fresh
     }
-  }, []);
+  }, [storageKey]);
 
   const persistData = useCallback(async () => {
     try {
@@ -82,11 +96,11 @@ export function useStepCounter(): StepCounterResult {
         hourlyBuckets: bucketsRef.current,
         totalSteps: stepCountRef.current,
       };
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(data));
     } catch {
       // Best-effort persistence
     }
-  }, []);
+  }, [storageKey]);
 
   // Record a single step
   const recordStep = useCallback(() => {
@@ -147,6 +161,7 @@ export function useStepCounter(): StepCounterResult {
       null;
 
     const setup = async () => {
+      resetStepData();
       // Load any existing data for today
       await loadPersistedData();
 
@@ -183,7 +198,7 @@ export function useStepCounter(): StepCounterResult {
       // Final persist on cleanup
       persistData();
     };
-  }, [loadPersistedData, processAccelSample, persistData]);
+  }, [loadPersistedData, processAccelSample, persistData, resetStepData]);
 
   return {
     totalSteps,
