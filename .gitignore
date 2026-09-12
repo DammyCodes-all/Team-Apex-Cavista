@@ -1,5 +1,4 @@
 .venv/
-.env
 __pycache__/
 .pytest_cache/
 .mypy_cache/
@@ -8,7 +7,6 @@ __pycache__/
 *.pyd
 env/
 venv/
-.vscode/
 dist/
 build/
 *.egg-info/
@@ -34,3 +32,5 @@ test_*.py
 temp_auto_push.bat
 temp_interactive_push.bat
 branch_structure.json
+config.bat
+node_modules
